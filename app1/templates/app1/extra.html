@@ -1,0 +1,435 @@
+Ansar Ahmed
+ULTIMATE DESIGN TECHNOLOGY LLP
+EE
+1173919287
+1173919287
+Mumbai
+ansar@mail.com
+
+************************
+
+
+
+this is site model "class Site(models.Model):
+picture = models.ImageField(upload_to='site_pictures/', blank=True, null=True)
+name = models.CharField(max_length=100,unique=True)
+location = models.CharField(max_length=100)
+
+def save(self, *args, **kwargs):
+    self.name = self.name.upper()
+    super(Site, self).save(*args, **kwargs)
+    
+def __str__(self):
+    return self.name" 
+    this is userenrolled model "class UserEnrolled(models.Model):
+    sr = models.AutoField(primary_key=True, unique=True)
+    picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
+    name = models.CharField(max_length=255)
+    company_name = models.CharField(max_length=100)
+    job_role = models.CharField(max_length=100)
+    mycompany_id = models.CharField(max_length=10)
+    tag_id = models.CharField(max_length=50)
+    job_location = models.CharField(max_length=100)
+    orientation = models.FileField(upload_to='attachments/', blank=True, null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
+    facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
+    my_comply = models.ImageField(upload_to='compliance_images/', blank=True, null=True)
+    status = models.CharField(max_length=100, choices=[
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+    ], default='active')
+    email = models.EmailField()
+    password = models.CharField(max_length=50)
+    site = models.ForeignKey('Site', on_delete=models.CASCADE)
+
+    def _str_(self):
+        return self.name
+
+    def get_folder_name(self):
+        return self.name
+
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        return check_password(raw_password, self.password)
+        "  
+    this is site_view "def site_view(request):
+    sites = Site.objects.all()
+    total_users = UserEnrolled.objects.count()
+    active_users = UserEnrolled.objects.filter(status='active').count()
+    inactive_users = UserEnrolled.objects.filter(status='inactive').count()
+    print(f"Total Users: {total_users}, Active Users: {active_users}, Inactive Users: {inactive_users}")
+    return render(request, 'app1/site.html', {
+        'sites': sites,
+        'total_users': total_users,
+        'active_users': active_users,
+        'inactive_users': inactive_users,
+    })" this is site.html "{% for site in sites %}
+    <tr>
+        <td>
+            {% if site.picture %}
+            <img src="{{ site.picture.url }}" alt="Site" style="width: 50px; height: auto;">
+            {% else %}
+            <img src="{% static 'app1/images/site.jpg' %}" alt="Site" style="width: 50px; height: auto;">
+            {% endif %}
+        </td>
+        <td><a href="{% url 'get_all' %}">{{ site.name }}</a></td>
+        <td>{{ site.location }}</td>
+        <td>{{ total_users }}</td>
+        <td>{{ active_users }}</td>
+        <td>{{ inactive_users }}</td>
+        <td>Ongoing</td>
+        <td class="table-actions">
+            <a href="#" class="btn-icon"><i class="fas fa-user"></i></a>
+            <a href="#" class="btn-icon"><i class="fas fa-cog"></i></a>
+        </td>
+        <td>
+            <div class="dropdownb">
+                <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
+                <div class="dropdown-contentb">
+                    <a href="{% url 'edit_sites' site.id %}" class="edit-btn">Edit</a>
+                    <a href="{% url 'delete_sites' site.pk %}" class="delete-btn">Delete</a>
+                </div>
+            </div>
+        </td>
+        
+    </tr>
+    {% endfor %}" 
+    now when i click on site names then i want filter data with that related site 
+    in userenrolled model so modify this filter data using site name and i use this function to show data "class get_data(ListView):
+    model = UserEnrolled
+    template_name = 'app1/getdata.html'
+    context_object_name = 'data'
+    paginate_by = 3
+    
+    def get_queryset(self):
+        queryset = UserEnrolled.objects.all()
+
+        # Filter based on query parameters
+        filter_name = self.request.GET.get('filterName')
+        filter_company_name = self.request.GET.get('filterCompanyName')
+        filter_job_role = self.request.GET.get('filterJobRole')
+        filter_job_location = self.request.GET.get('filterJobLocation')
+        filter_status = self.request.GET.get('filterStatus')
+
+        if filter_name:
+            queryset = queryset.filter(name__icontains=filter_name)
+        if filter_company_name:
+            queryset = queryset.filter(company_name__icontains=filter_company_name)
+        if filter_job_role:
+            queryset = queryset.filter(job_role__icontains=filter_job_role)
+        if filter_job_location:
+            queryset = queryset.filter(job_location__icontains=filter_job_location)
+        if filter_status:
+            queryset = queryset.filter(status__iexact=filter_status)
+
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        page = self.request.GET.get('page')
+        paginator = Paginator(self.get_queryset(), self.paginate_by)
+        page_obj = paginator.get_page(page)
+        offset = self.paginate_by * (page_obj.number - 1)
+        context['offset'] = offset
+        context['page_obj'] = page_obj
+        context['paginator'] = paginator
+        return context" 
+        
+    and this is getdata.html "<form method="post" action="{% url 'delete_selected2' %}">
+        {% csrf_token %}
+    <table id="customers">
+        <tr>
+            <th><input type="checkbox" onClick="toggleAll(this)"></th>
+            <th>
+                <div>
+                    <span class="filter-icon" onclick="toggleFilter('sr', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                    Sr No
+                </div>
+            </th>
+            <th>Picture</th>
+            <th>
+                <div>
+                    <span class="filter-icon" onclick="toggleFilter('name', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                    Name
+                </div>
+            </th>
+            <th>
+                <div>
+                    <span class="filter-icon" onclick="toggleFilter('company_name', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                    Company
+                </div>
+            </th>
+            <th>
+                <div>
+                    <span class="filter-icon" onclick="toggleFilter('job_role', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                    Job
+                </div>
+            </th>
+
+            <th>
+                <div>
+                    <span class="filter-icon" onclick="toggleFilter('mycompany_id', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                    MC ID
+                </div>
+            </th>
+            <th>
+                <div>
+                    <span class="filter-icon" onclick="toggleFilter('tag_id', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                    Tag ID
+                </div>
+            </th>
+            <th>
+                <div>
+                    <span class="filter-icon" onclick="toggleFilter('job_location', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                    Location
+                </div>
+            </th>
+            <th>Email</th>
+            <th>Orientation</th>
+            <th>Facial Data</th>
+            <th>MyComply</th>
+            <th>
+                <div>
+                    <span class="filter-icon" onclick="toggleFilter('status', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                    Status
+                </div>
+            </th>
+            <th>Action</th>
+        </tr>
+
+        {% for i in data %}
+        <tr>
+            <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
+            
+            <td>{{i.sr}}</td>
+            <td>
+                {% if i.picture %}
+                <img src="{{ i.picture.url }}" alt="user" style="width: 50px; height: auto;">
+                {% else %}
+                <img src="{% static 'app1/images/site.jpg' %}" alt="user" style="width: 50px; height: auto;">
+                {% endif %}
+            </td>
+            <td>{{i.name}}</td>
+            <td>{{i.company_name}}</td>
+            <td>{{i.job_role}}</td>
+            <td>{{i.mycompany_id}}</td>
+            <td>{{i.tag_id}}</td>
+            <td>{{i.job_location}}</td>
+            <td>{{i.email}}</td>
+            {% load custom_filters %}
+            <td>
+                {% if i.orientation %}
+                {% with file_extension=i.orientation.name|lower %}
+                <a href="{{ i.orientation.url }}" target="_blank">
+                    <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                                {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                                {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                                {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                                {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                                {% else %}far fa-file
+                            {% endif %}"></i>
+                </a>
+                {% endwith %}
+                {% else %}
+                N/A
+                {% endif %}
+            </td>
+            {% load custom_filters %}
+            <td>
+                {% with file_extension=i.facial_data.name|lower %}
+                <a href="{% url 'show_facial_data_images' i.pk %}" target="_blank">
+                    <i class="far fa-file-image
+                        {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                        {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                        {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                        {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                        {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                        {% else %}far fa-file
+                        {% endif %}
+                    "></i>
+                </a>
+                {% endwith %}
+            </td>
+            <td>
+                {% if i.my_comply %}
+                {% with file_extension=i.my_comply.name|lower %}
+                <a href="{{ i.my_comply.url }}" target="_blank">
+                    <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                                {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                                {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                                {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                                {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                                {% else %}far fa-file
+                            {% endif %}"></i>
+                </a>
+                {% endwith %}
+                {% else %}
+                N/A
+                {% endif %}
+            </td>
+            
+            <td>{{i.status}}</td>
+            <td>
+                <div class="dropdownb">
+                    <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
+                    <div class="dropdown-contentb">
+                        <a href="{% url 'user_update' i.sr %}" class="edit-btn">Edit</a>
+                        <a href="{% url 'task_delete' i.pk %}" class="delete-btn">Delete</a>
+                    </div>
+                </div>
+            </td>
+            
+        </tr>
+        {% endfor %}
+    </table>"
+*****************************************
+
+
+
+this is asset model "class Asset(models.Model):
+asset_id = models.IntegerField(unique=True)
+picture = models.ImageField(upload_to='asset_pictures/', blank=True, null=True)
+asset_name = models.CharField(max_length=255)
+tag_id = models.IntegerField()
+footage = models.ImageField(upload_to='assets_footage/', blank=True, null=True, verbose_name='Footage')
+description = models.CharField(max_length=500)
+asset_category = models.CharField(max_length=50)
+STATUS_CHOICES = [
+    ('active', 'Active'),
+    ('inactive', 'Inactive'),
+]
+status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='inactive')
+location = models.CharField(max_length=100, blank=True, null=True)
+time_log = models.DateTimeField(auto_now=True)
+site = models.ForeignKey('Site', on_delete=models.CASCADE)
+
+def _str_(self):
+    return self.asset_name
+
+def check_file_exists(self, file_field):
+    if file_field and os.path.isfile(os.path.join(settings.MEDIA_ROOT, file_field.name)):
+        return True
+    return False
+
+def check_picture_exists(self):
+    return self.check_file_exists(self.picture)
+
+def check_footage_exists(self):
+    return self.check_file_exists(self.footage)
+" this is header link "<a href="{% url 'asset_site' %}"><i class="fas fa-tasks"></i> Asset Management</a>"
+
+this is site model "class Site(models.Model):
+picture = models.ImageField(upload_to='site_pictures/', blank=True, null=True)
+name = models.CharField(max_length=100,unique=True)
+location = models.CharField(max_length=100)
+
+def save(self, *args, **kwargs):
+    self.name = self.name.upper()
+    super(Site, self).save(*args, **kwargs)
+    
+def __str__(self):
+    return self.name
+
+we use site_name as url parameter to filter userenrolled data now when i go to filter userenrolled page data 
+there asset management link is present so there give data that related to that perticular site
+
+this is aset view "def asset_site(request):
+assets = Asset.objects.all()
+paginator = Paginator(assets, 8)
+
+page_number = request.GET.get('page')
+assets = paginator.get_page(page_number)
+
+return render(request, 'app1/asset_site.html', {'assets': assets})" this is asset_site.html " {% for asset in assets %}
+<tr>
+    <td>{{ asset.asset_id }}</td>
+    <td>
+        {% if asset.picture %}
+        <img src="{{ asset.picture.url }}" alt="Asset" style="width: 50px; height: auto;">
+        {% else %}
+        <img src="{% static 'app1/images/site.jpg' %}" alt="Asset" style="width: 50px; height: auto;">
+        {% endif %}
+    </td>
+    <td><a class="link" href="{% url 'asset_details' asset_id=asset.asset_id %}">{{ asset.asset_name }}</a></td>
+    <td>{{ asset.tag_id }}</td>
+    <td>
+        {% if asset.footage %}
+            {% with file_extension=asset.footage.name|lower %}
+                <a href="{{ asset.footage.url }}" target="_blank">
+                    <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                                        {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                                        {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                                        {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                                        {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                                        {% else %}far fa-file
+                                    {% endif %}" style="color: black;"></i>
+                </a>
+            {% endwith %}
+        {% else %}
+            N/A
+        {% endif %}
+    </td>
+    
+    
+    <td>{{ asset.status }}</td>
+    <td>
+        <div class="dropdownb">
+            <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
+            <div class="dropdown-contentb">
+                <a href="{% url 'update_asset' asset_id=asset.asset_id %}" class="edit-btn">Edit</a>
+                <a href="{% url 'delete_asset' asset_id=asset.asset_id %}" class="delete-btn">Delete</a>
+            </div>
+        </div>
+    </td>   
+    
+</tr>
+{% endfor %}"
+
+
+
+******************************
+
+
+
+i want to Super Admin should be able to create SubAdmin i use this coustom model "class CustomUserManager(BaseUserManager):
+def create_user(self, email, password=None, **extra_fields):
+    if not email:
+        raise ValueError("The email field must be set")
+    email = self.normalize_email(email).lower()  # Convert to lowercase
+    user = self.model(email=email, **extra_fields)
+    user.set_password(password)
+    user.save(using=self._db)
+    return user
+
+# ... rest of the code remains the same
+
+def create_superuser(self, email, password=None, **extra_fields):
+    extra_fields.setdefault("is_staff", True)
+    extra_fields.setdefault("is_superuser", True)
+    if extra_fields.get("is_staff") is not True:
+        raise ValueError("Superuser must have is_staff=True.")
+    if extra_fields.get("is_superuser") is not True:
+        raise ValueError("Superuser must have is_superuser=True.")
+    return self.create_user(email, password, **extra_fields)
+
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+email = models.EmailField(unique=True)
+name = models.CharField(max_length=255)  # Add this field
+company_name = models.CharField(max_length=100)  # Add this field
+job_role = models.CharField(max_length=100)  # Add this field
+mycompany_id = models.CharField(max_length=10)  # Add this field
+tag_id = models.CharField(max_length=50)  # Add this field
+job_location = models.CharField(max_length=100)  # Add this field
+is_active = models.BooleanField(default=True)
+is_staff = models.BooleanField(default=False)
+date_joined = models.DateTimeField(default=timezone.now)
+
+objects = CustomUserManager()
+
+USERNAME_FIELD = 'email'
+REQUIRED_FIELDS = ['name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location']
+
+def __str__(self):
+    return self.email" so write backend for this
+    

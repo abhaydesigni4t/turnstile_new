@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Asset</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Delete Asset</h1>
+    <p>Are you sure you want to delete asset ID {{ asset.id }} - {{ asset.name }}?</p>
+    
+    <form method="post" action="{% url 'asset_management:delete_asset' asset.id %}">
+        {% csrf_token %}
+        <input type="submit" value="Delete">
+    </form>
+
+    <a href="{% url 'asset_management:asset_list' %}">Cancel</a>
+</body>
+</html>

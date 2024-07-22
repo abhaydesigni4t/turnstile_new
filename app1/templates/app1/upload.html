@@ -1,0 +1,160 @@
+<!DOCTYPE html>      
+<!-- remove digital signature  -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard</title>
+
+</head>
+<style>
+    body {
+        font-family: 'Verdana', sans-serif;
+        width: 100%;
+        margin: 0;
+        padding-top: 10vh; 
+        background: #f4f4f4; 
+    }
+
+    header {
+        background-color: #071390;
+        color: white;
+        text-align: center;
+        padding: 20px 0;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+    }
+
+    .nav a {
+        padding: 10px 15px;
+        color: white;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .form-container {
+        background: white;
+        padding: 20px;
+        max-width: 500px;
+        margin: auto;
+        box-shadow: 4px 4px 4px 4px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        padding: 50px;
+        margin-top: 50px;
+    }
+
+    label {
+        display: block;
+        margin: 20px 0 10px;
+    }
+
+    input {
+        width: calc(100% - 20px); 
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+
+    .send-button {
+        width: 100%;
+        padding: 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        background-color: #071390;
+        color: white;
+        
+    }
+
+    .send-button:hover {
+        background-color: #45a049;
+    }
+
+    @media (max-width: 768px) {
+        header {
+            padding: 10px 0;
+        }
+
+        .nav a {
+            padding: 10px 10px;
+            font-size: 14px;
+        }
+
+        .form-container {
+            margin: 20px;
+        }
+
+        input {
+            width: calc(100% - 20px);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .nav a {
+            padding: 10px 5px;
+            font-size: 12px;
+        }
+
+        .form-container {
+            margin: 10px;
+        }
+    }
+
+    .dropdown {
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f1f1f1;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 8px 10px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {background-color: #ddd;}
+
+        .dropdown:hover .dropdown-content {display: block;}
+
+</style>
+<body>
+    <header>
+        <nav class="nav">
+            <div class="dropdown">
+                <a href="#">Site Management</a>
+                <div class="dropdown-content">
+                  <a href="{% url 'get_home' %}">Link 1</a>
+                  <a href="{% url 'get_home' %}">Link 2</a>
+                  <a href="{% url 'get_home' %}">Link 3</a>
+                  <a href="{% url 'get_home' %}">Link 4</a>
+                  <a href="{% url 'get_home' %}">Link 5</a>
+                </div>
+            </div> 
+            <a href="{% url 'get_all' %}">User Management</a>
+            <a href="{% url 'orientation1' %}">Orientation</a>
+            <a href="{% url 'upload' %}">Digital Signage</a>
+            <a href="{% url 'report' %}">Analytics & Reports</a>
+            <a href="{% url 'notification' %}">Notifications</a>
+        </nav>
+    </header>
+    
+    <div class="form-container">
+    <form method="post" action="{% url 'upload' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}  <br>
+            <button type="submit" class="send-button">Upload Document</button>
+    </form>
+    </div>
+</body>
+</html>

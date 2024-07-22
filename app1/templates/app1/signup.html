@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SignUp</title>
+{% load static %}
+<link rel="stylesheet" href="styles.css">
+<style>
+    body {
+        font-family: 'Times New Roman', Times, serif;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        overflow: hidden; /* Ensure that the blurred background doesn't overflow */
+        background-image: url('{% static 'app1/images/login_image.jpg' %}'); /* Your background image */
+        background-size: cover;
+        background-position: center;
+    }
+
+    .background-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(217, 213, 300, 0.7); 
+        backdrop-filter: blur(0.3px); /* Blur effect */
+        z-index: -1; /* Place the overlay behind other content */
+    }
+
+    .logo-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .logo-container img {
+        max-width: 150px;
+        height: auto; 
+        filter: brightness(100%); /* Adjust brightness as needed */
+    }
+
+    .auth-container {
+        z-index: 1; /* Ensure the content is above the overlay */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column; /* Arrange logo and card vertically */
+        height: 100%; /* Full height */
+        width: 100%; /* Full width */
+        overflow: auto; /* Enable scrolling */
+        padding: 20px; /* Add some padding */
+        box-sizing: border-box; /* Include padding in the element's total width and height */
+        margin-top:80px;
+    }
+
+    .auth-card {
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 400px;
+    }
+
+    .auth-tabs {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 20px;
+        cursor: pointer;
+    }
+
+    .auth-tabs div {
+        padding-bottom: 10px;
+        border-bottom: 2px solid transparent;
+    }
+
+    .auth-tabs div.active {
+        border-bottom: 2px solid #071390;
+        color: #071390;
+    }
+
+    .auth-form {
+        display: none;
+        flex-direction: column;
+    }
+
+    .auth-form.active {
+        display: flex;
+    }
+
+    .auth-form label {
+        margin-bottom: 5px;
+    }
+
+    .auth-form input[type="email"],
+    .auth-form input[type="password"],
+    .auth-form input[type="text"] {
+        padding: 5px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .auth-form input::placeholder {
+        font-size: 14px;
+        color: #999;
+    }
+
+    .auth-form button {
+        background-color: #071390;
+        color: white;
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 18px;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    .auth-form button:hover {
+        background-color: #365abf;
+    }
+
+    h2 {
+        text-align: center;
+        margin: 0 0 20px 0;
+    }
+
+    .popup-message {
+        display: none;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #4CAF50;
+        color: white;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+    }
+
+    .popup-message.error {
+        background-color: #F44336;
+    }
+
+    .error-message {
+        color: red;
+        margin-top: 10px;
+    }
+
+   
+    /* Media Queries */
+    @media only screen and (max-width: 768px) {
+        .auth-card {
+            width: 80%;
+        }
+    }
+
+    @media only screen and (max-width: 480px) {
+        .auth-card {
+            width: 90%;
+        }
+    }
+
+  
+</style>
+</head>
+<body>
+<div class="background-overlay"></div>
+<div class="auth-container">
+    <div class="logo-container">
+        <img src="{% static 'app1/images/logo.png' %}" alt="Assure Tech Logo">
+    </div>
+
+   
+    <div class="auth-card">
+       
+        <div class="auth-tabs">
+            <div id="signin-tab" class="active">Sign in</div>
+            <div id="signup-tab">Sign up</div>
+        </div>
+        
+        <!-- Login Form -->
+        <form id="signin-form" action="{% url 'login' %}" method="POST" class="auth-form active">
+            {% csrf_token %}
+            <label for="signin-email">E-mail</label>
+            <input type="email" id="signin-email" name="email" placeholder="Email" required>
+            <label for="signin-password">Password</label>
+            <input type="password" id="signin-password" name="password" placeholder="Password" required>
+            <button type="submit">Sign in</button>
+            {% if form.errors %}
+                <div class="error-message">
+                    {% for field, error in form.errors.items %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </form>
+        
+        <!-- Signup Form -->
+        <form id="signup-form" action="{% url 'signup' %}" method="post" class="auth-form">
+            {% csrf_token %}
+            <label for="signup-name">Name</label>
+            <input type="text" id="signup-name" name="name" placeholder="Name" required>
+            
+            <label for="signup-email">E-mail</label>
+            <input type="email" id="signup-email" name="email" placeholder="Email" required>
+            
+            <label for="signup-password">Password</label>
+            <input type="password" id="signup-password" name="password" placeholder="Password" required>
+            
+            <label for="signup-company-name">Company Name</label>
+            <input type="text" id="signup-company-name" name="company_name" placeholder="Company Name" required>
+            
+            <label for="signup-job-role">Job Role</label>
+            <input type="text" id="signup-job-role" name="job_role" placeholder="Job Role" required>
+            
+            <label for="signup-mycompany-id">Company ID</label>
+            <input type="text" id="signup-mycompany-id" name="mycompany_id" placeholder="Company ID" required>
+            
+            <label for="signup-tag-id">Tag ID</label>
+            <input type="text" id="signup-tag-id" name="tag_id" placeholder="Tag ID" required>
+            
+            <label for="signup-job-location">Job Location</label>
+            <input type="text" id="signup-job-location" name="job_location" placeholder="Job Location" required>
+            
+            <button type="submit">Sign up</button>
+            
+            {% if form.errors %}
+                <div class="error-message">
+                    {% for field, error in form.errors.items %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </form>
+        
+    </div>
+</div>
+<div id="popup-message" class="popup-message"></div>
+
+<script>
+    document.getElementById('signin-tab').addEventListener('click', function() {
+        document.getElementById('signin-tab').classList.add('active');
+        document.getElementById('signup-tab').classList.remove('active');
+        document.getElementById('signin-form').classList.add('active');
+        document.getElementById('signup-form').classList.remove('active');
+    });
+
+    document.getElementById('signup-tab').addEventListener('click', function() {
+        document.getElementById('signup-tab').classList.add('active');
+        document.getElementById('signin-tab').classList.remove('active');
+        document.getElementById('signup-form').classList.add('active');
+        document.getElementById('signin-form').classList.remove('active');
+    });
+
+    window.addEventListener('DOMContentLoaded', (event) => {
+        {% if messages %}
+            {% for message in messages %}
+                alert("{{ message }}");
+            {% endfor %}
+        {% endif %}
+    });
+</script>
+</body>
+</html>

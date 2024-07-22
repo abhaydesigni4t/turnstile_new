@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha384-l2pS9FXoq07xZ8T3is0sZuqA4xsJqHvAWEbflU24M6p0T/zl5sJ46R/DLxUJhSZ+7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Dashboard</title>
+    {% load static %}
+    <style>
+        body {
+            font-family: 'Verdana', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f4;
+            box-sizing: border-box;
+        }
+    
+        header {
+            background-color: #ffffff;
+            color: black;
+            text-align: center;
+            padding: 15px 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    
+        .nav a {
+            color: black;
+            padding: 10px 10px;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 2px;
+            transition: color 0.3s ease;
+        }
+    
+        .nav {
+            display: flex;
+            align-items: center;
+            margin-right: 100px;
+        }
+    
+        .logo img {
+            max-height: 35px;
+            margin-left: 15px;
+            float: left;
+            border-radius: 20px;
+        }
+    
+        .dropdown {
+            display: inline-block;
+            position: relative;
+            text-align: center;
+        }
+    
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f1f1f1;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            max-width: calc(100vw - 40px);
+            overflow: auto;
+        }
+    
+        .dropdown-content a {
+            color: black;
+            padding: 8px 10px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+    
+        .nav .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #ffffff;
+            min-width: 20px;
+            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+    
+        .nav .dropdown-content a {
+            float: none;
+            color: black;
+            padding: 6px 6px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-left: 6px;
+        }
+    
+        .nav .dropdown-content a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+    
+        .nav .dropdown:hover .dropdown-content {
+            display: block;
+        }
+    
+
+        .hidden-desktop {
+            display: none;
+        }
+    
+        
+        .sidebar-logo {
+            text-align: center;
+            margin-bottom: -5px;
+            /* Adjust as needed */
+            margin-right: 80px;
+            margin-left: -10px
+        }
+    
+        .sidebar-logo img {
+            max-width: 150px;
+            /* Adjust the size as needed */
+        }
+    
+    
+        .sidebar {
+            width: 250px;
+            background-color: #fff;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            padding-top: 10px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+    
+        .sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 16px;
+            color: black;
+            display: block;
+            transition: 0.3s;
+    
+        }
+    
+        .sidebar a:hover {
+            background-color: #f1f1f1;
+        }
+    
+        .sidebar .user-info {
+            margin: 20px 0;
+            padding: 0 15px;
+        }
+    
+        .sidebar .user-info img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+    
+        .sidebar .user-info .user-details {
+            display: flex;
+            align-items: center;
+        }
+    
+        .sidebar .user-info .user-details div {
+            margin-left: 10px;
+        }
+    
+ 
+        .sidebar a i {
+            margin-right: 5px;
+        }
+    
+        .dropdown a i {
+            margin-right: 2px;
+        }
+    
+        .nav a i {
+            margin-right: 5px;
+        }
+
+        .sidebar a.activeLink,
+        .sidebar a.activeLink:hover {
+        color:  #071390 !important;
+    }
+
+    .content {
+        margin-left: 250px;
+        padding: 20px;
+    }
+
+    .add {
+        background-color: #071390;
+        color: white;
+        padding: 8px;
+        border: solid;
+        margin-top: 10px;
+        display: inline-block;
+        text-decoration: none;
+        border-radius: 7px 7px;
+    }
+
+    .user {
+        text-align: left;
+        margin-top: 50px;
+        margin-left: 5px;
+    }
+
+    #table-container {
+        margin-top: 10px;
+        margin-left: 5px;
+        margin-right: 50px;
+        background-color: #ffffff;
+        width: 100%;
+        overflow-y: auto; /* Allow vertical scrolling */
+        height: calc(100vh - 100px); /* Adjust height according to your needs */
+    }
+
+    #customers {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    
+    #customers th,
+    #customers td {
+        padding: 8px 10px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    #customers th {
+        background-color: #e3e7ea;
+        font-weight: bold;
+    }
+    
+    #customers tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    tr:nth-child(even) {
+        background-color: #9b9b9b;
+    }
+
+        .edit-btn,
+        .delete-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            text-decoration: none;
+        }
+
+        .delete-btn {
+            background-color: #f2463d;
+        }
+
+
+    .hidden-desktop {
+        display: none;
+    }
+
+
+    /* Container needed to position the dropdown content */
+.dropdownb {
+    position: relative;
+    display: inline-block;
+}
+
+/* Style the dropdown button */
+.toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* Style for the dropdown content */
+.dropdown-contentb {
+    display: none;
+    position: absolute;
+    top: 100%; /* Position the dropdown content directly below the button */
+    left: -28px; /* Align the dropdown content to the left */
+    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    min-width: 70px;
+}
+
+/* Links inside the dropdown */
+.dropdown-contentb a {
+    color: black;
+    padding: 7px 9px;
+    text-decoration: none;
+    display: block;
+}
+
+
+/* Use :hover to display the dropdown when the button is hovered */
+.dropdownb:hover .dropdown-contentb {
+    display: block;
+}
+
+/* Additional styling for the button icon */
+.btn-icon {
+    background: none; /* Remove background color */
+    border: none;     /* Remove border */
+    color: inherit;   /* Inherit text color */
+    cursor: pointer;  /* Pointer cursor */
+    padding: 0;       /* Remove padding */
+}
+
+.btn-icon i {
+    font-size: 16px;  /* Adjust icon size if needed */
+}
+
+
+    @media only screen and (max-width: 768px) {
+    .hidden-desktop {
+        display: block;
+    }
+
+    .nav {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        background-color: #071390;
+        width: 40%;
+        top: 70px;
+        left: 0;
+        padding: 10px;
+    }
+
+    .nav.open {
+        display: flex;
+    }
+
+    .nav-toggle-label {
+        display: block;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    .nav-toggle-label span {
+        display: block;
+        width: 25px;
+        height: 3px;
+        background-color: white;
+        margin: 5px;
+    }
+
+    .edit-btn,
+    .delete-btn {
+        display: block;
+        margin-bottom: 5px;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    #table-container table {
+        width: 95%;
+    }
+
+    #table-container th,
+    #table-container td {
+        padding: 8px;
+        font-size: 14px;
+    }
+
+    #table-container th {
+        background-color: #071390;
+    }
+
+    #table-container tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    #table-container tr:hover {
+        background-color: #ddd;
+    }
+
+    #table-container th:nth-child(1),
+    #table-container td:nth-child(1) {
+        display: none;
+    }
+
+    #table-container td:last-child {
+        white-space: nowrap;
+    }
+}
+
+    </style>
+</head>
+
+<body>
+    <header>
+        <a class="logo" href="#"><img src="{% static 'app1/images/logo.jpg' %}" alt="Logo"></a>
+
+        <nav class="nav">
+            <a href="{% url 'get_all' %}"><i class="fas fa-users"></i>User Management</a>
+            <a href="{% url 'asset_site' %}"><i class="fas fa-tasks"></i> Asset Management</a>
+            <a href="{% url 'site_docu' %}"><i class="fas fa-file-alt"></i> Site Documents</a>
+            <a href="{% url 'onsite_user' %}"><i class="fas fa-user-check"></i> On Site User</a>
+            <div class="dropdown">
+                <a href="#" class="dropbtn"><i class="fas fa-language"></i> Language</a>
+                <div class="dropdown-content">
+                    <a href="#"><i class="fas fa-globe"></i> English</a>
+                    <a href="#"><i class="fas fa-globe"></i> Spanish</a>
+                </div>
+            </div>
+            
+            <div class="dropdown">
+                <a href="#" class="dropbtn"><i class="fas fa-cog"></i> Settings</a>
+                <div class="dropdown-content">
+                    <a href="{% url 'time' %}"><i class="fas fa-clock"></i> Time Schedule</a>
+                    <a href="{% url 'setting_t' %}"><i class="fas fa-exchange-alt"></i> Turnstile</a>
+                </div>
+            </div>
+        </nav>
+    
+    </header>
+
+    <a class="nav-toggle-label hidden-desktop" onclick="toggleNav()">
+        <i class="fas fa-bars"></i>
+    </a>
+
+
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <a href="#"><img src="{% static 'app1/images/logo.png' %}" alt="Logo"></a>
+        </div>
+        
+        <a href="{% url 'sites' %}"><i class="fas fa-globe"></i> Site Management</a>
+        <a href="{% url 'get_all' %}"><i class="fas fa-users"></i> User Management</a>
+        <a href="{% url 'report' %}"><i class="fas fa-chart-bar"></i> Analytics & Reports</a>
+        <a href="{% url 'notification1' %}"><i class="fas fa-bell"></i> Notifications</a>
+        <a href="{% url 'company' %}"><i class="fas fa-building"></i> Company</a>
+        <a href="{% url 'orientation' %}"><i class="fas fa-file-alt"></i> Documents</a>
+
+        <br> <br> 
+
+        <div class="user-info">
+            <div class="user-details">
+                <img src="{% static 'app1/images/admin_image1.jpg' %}" alt="User">
+                <div>
+                    <p>Annette Black</p>
+                    <small>Admin</small>
+                </div>
+            </div>
+        </div>
+        <a href="{% url 'app2_login' %}" class="logout" style="color: red;"><i class="fas fa-sign-out-alt"></i> Log out</a>
+        <a href="#" class="">AssureTech 2024</a>
+    </div>
+
+    <div class="content">
+    <div class="user">
+        <a class="add" href="{% url 'add_company' %}">Add New</a>
+    </div>
+
+    <div id="table-container">
+        <table id="customers">
+            <tr>
+                <th>Sr No</th>
+                <th>Name</th>
+                <th>Works</th>
+                <th>Safety Insurance</th>
+                <th>Insurance Expiry</th>
+                <th>Action</th>   
+            </tr>
+            
+            {% for i in compy %}
+            <tr>
+                <td>{{ i.sr }}</td>
+                <td>{{ i.name }}</td>
+                <td>{{ i.works }}</td> 
+                <td>{% if i.safety_insurance %}
+                    {% with file_extension=i.safety_insurance.name|lower %}
+                    <a href="{{ i.safety_insurance.url }}" target="_blank">
+                        <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                                    {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                                    {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                                    {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                                    {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                                    {% else %}far fa-file
+                                {% endif %}"></i>
+                    </a>
+                    {% endwith %}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                <td>{{ i.insurance_expiry }}</td>
+                <td>
+                    <div class="dropdownb">
+                        <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
+                        <div class="dropdown-contentb">
+                            <a href="{% url 'edit_company' i.sr %}" class="edit-btn">Edit</a>
+                            <a href="{% url 'delete_company' i.sr %}" class="delete-btn">Delete</a>
+                        </div>
+                    </div>
+                </td>   
+            </tr>
+                {% endfor %}
+        </table>
+    </div>
+</div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const pathName = window.location.pathname;
+            const activeLink = document.querySelector(`.sidebar a[href="${pathName}"]`);
+        
+            if (activeLink) {
+                activeLink.classList.add('activeLink');
+                activeLink.style.color = 'blue'; // Add this line to set the color to blue
+            }
+        });
+    </script>
+
+<script>
+    function toggleNav() {
+        var nav = document.querySelector('.nav');
+        nav.classList.toggle('open');
+    }
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha384-l2pS9FXoq07xZ8T3is0sZuqA4xsJqHvAWEbflU24M6p0T/zl5sJ46R/DLxUJhSZ+7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>User Management</title>
+    {% load static %}
+
+    <script>
+ 
+
+        function toggleAll(source) {
+            checkboxes = document.getElementsByName('selected_recordings');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+    
+        function makeInactiveSelected() {
+            var selectedRecords = document.querySelectorAll('input[name="selected_recordings"]:checked');
+            if (selectedRecords.length === 0) {
+                alert("Please select at least one record to make inactive.");
+            } else {
+                var formData = new FormData();
+                selectedRecords.forEach(function(record) {
+                    formData.append('selected_recordings', record.value);
+                });
+
+                fetch('{% url "make_inactive_selected" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload(); 
+                    } else {
+                        alert('Error: ' + response.statusText);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        }
+
+    </script>
+
+   
+
+    <style>
+        
+        body {
+            font-family: 'Verdana', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f4;
+            box-sizing: border-box;
+        }
+    
+        header {
+            background-color: #ffffff;
+            color: black;
+            text-align: center;
+            padding: 15px 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    
+        .nav a {
+            color: black;
+            padding: 10px 10px;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 25px;
+            transition: color 0.3s ease;
+        }
+    
+        .nav {
+            display: flex;
+            align-items: center;
+            margin-right: 100px;
+        }
+    
+        .logo img {
+            max-height: 35px;
+            margin-left: 15px;
+            float: left;
+            border-radius: 20px;
+        }
+    
+        .dropdown {
+            display: inline-block;
+            position: relative;
+            text-align: center;
+        }
+    
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f1f1f1;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            max-width: calc(100vw - 40px);
+            overflow: auto;
+        }
+    
+        .dropdown-content a {
+            color: black;
+            padding: 8px 10px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+    
+        .nav .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #ffffff;
+            min-width: 20px;
+            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+    
+        .nav .dropdown-content a {
+            float: none;
+            color: black;
+            padding: 6px 6px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-left: 6px;
+        }
+    
+        .nav .dropdown-content a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+    
+        .nav .dropdown:hover .dropdown-content {
+            display: block;
+
+        }
+            .hidden-desktop {
+                display: none;
+            }
+        
+            
+            .sidebar-logo {
+                text-align: center;
+                margin-bottom: -5px;
+                /* Adjust as needed */
+                margin-right: 80px;
+                margin-left: -10px
+            }
+        
+            .sidebar-logo img {
+                max-width: 150px;
+                /* Adjust the size as needed */
+            }
+        
+        
+            .sidebar {
+                width: 250px;
+                background-color: #fff;
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                padding-top: 10px;
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+            }
+        
+            .sidebar a {
+                padding: 10px 15px;
+                text-decoration: none;
+                font-size: 16px;
+                color: black;
+                display: block;
+                transition: 0.3s;
+        
+            }
+        
+            .sidebar a:hover {
+                background-color: #f1f1f1;
+            }
+        
+            .sidebar .user-info {
+                margin: 20px 0;
+                padding: 0 15px;
+            }
+        
+            .sidebar .user-info img {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                margin-right: 10px;
+            }
+        
+            .sidebar .user-info .user-details {
+                display: flex;
+                align-items: center;
+            }
+        
+            .sidebar .user-info .user-details div {
+                margin-left: 10px;
+            }
+        
+     
+            .sidebar a i {
+                margin-right: 5px;
+            }
+
+            .nav a i {
+                margin-right: 5px;
+            }
+        
+            .dropdown a i {
+                margin-right: 2px;
+            }
+        
+
+        .user {
+            text-align: center;
+            margin-top: 80px;
+          
+        }
+
+        #table-container {
+            margin-left: 250px; /* Adjust based on sidebar width */
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 30px; 
+            width:130%;
+        }
+        
+        .filter-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 20px;
+        }
+        
+        .filter-container label {
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        
+        .filter-container input,
+        .filter-container select {
+            padding: 4px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100px;
+        }
+        
+        /* Table styles */
+        #customers {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        #customers th,
+        #customers td {
+            padding: 8px 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        #customers th {
+            background-color:  #e3e7ea;
+            font-weight: bold;
+        }
+        
+        #customers tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .heading1 {
+            text-align: center;
+            color: #071390;
+        }
+
+        .user .add {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            margin-left: 250px;
+            margin-top: 20px;
+        }
+        
+        .user .add:hover {
+            background-color: #0056b3;
+        }
+
+        
+        
+        .inactive-btn {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            text-decoration: none;
+        }
+
+        .delete-btn1 {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            text-decoration: none;
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+
+        .edit-btn
+             {
+        background-color: #4CAF50;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 5px;
+        text-decoration: none;
+    }
+
+    .delete-btn {
+        background-color: #f2463d;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 5px;
+        text-decoration: none;
+    }
+        .inactive-btn {
+            background-color: #ffc107;
+            color: #ffffff;
+        }
+
+        .inactive-btn:hover {
+            background-color: #e0a800;
+        }
+
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .pagination .step-links a,
+        .pagination .step-links span {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 0 5px;
+            text-decoration: none;
+            color: #007bff;
+        }
+        
+        .pagination .step-links .current {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+        
+        .pagination .step-links a:hover {
+            background-color: #0056b3;
+            color: #ffffff;
+        }
+
+        #filterStatus option[selected] {
+            background-color: #ddd;
+        }
+
+        .filter-container {
+            margin-bottom: 5px;
+            margin-left: 50px;
+        }
+
+        
+        .filter-icon {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        
+        th div {
+            display: flex;
+            align-items: center;
+        }
+
+   
+    .hidden-desktop {
+        display: none;
+    }
+
+
+
+    .table-actions {
+        position: relative;
+    }
+    
+    /* Container needed to position the dropdown content */
+.dropdownb {
+    position: relative;
+    display: inline-block;
+}
+
+/* Style the dropdown button */
+.toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* Style for the dropdown content */
+.dropdown-contentb {
+    display: none;
+    position: absolute;
+    top: 100%; /* Position the dropdown content directly below the button */
+    left: -28px; /* Align the dropdown content to the left */
+    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    min-width: 70px;
+}
+
+/* Links inside the dropdown */
+.dropdown-contentb a {
+    color: black;
+    padding: 10px 11px;
+    text-decoration: none;
+    display: block;
+}
+
+
+/* Use :hover to display the dropdown when the button is hovered */
+.dropdownb:hover .dropdown-contentb {
+    display: block;
+}
+
+/* Additional styling for the button icon */
+.btn-icon {
+    background: none; /* Remove background color */
+    border: none;     /* Remove border */
+    color: inherit;   /* Inherit text color */
+    cursor: pointer;  /* Pointer cursor */
+    padding: 0;       /* Remove padding */
+}
+
+.btn-icon i {
+    font-size: 16px;  /* Adjust icon size if needed */
+}
+
+
+    .sidebar a.activeLink,
+    .sidebar a.activeLink:hover {
+        color:  #071390 !important;
+    }
+
+    </style>
+</head>
+
+<body>
+    <header>
+        <a class="logo" href="#"><img src="{% static 'app1/images/logo.jpg' %}" alt="Logo"></a>
+
+      
+        <nav class="nav">
+            <a href="{% url 'asset_site' %}"><i class="fas fa-tasks"></i> Asset Management</a>
+            <a href="{% url 'site_docu' %}"><i class="fas fa-file-alt"></i> Site Documents</a>
+            <a href="{% url 'onsite_user' %}"><i class="fas fa-user-check"></i> On Site User</a>
+            <div class="dropdown">
+                <a href="#" class="dropbtn"><i class="fas fa-language"></i> Language</a>
+                <div class="dropdown-content">
+                    <a href="#"><i class="fas fa-globe"></i> English</a>
+                    <a href="#"><i class="fas fa-globe"></i> Spanish</a>
+                </div>
+            </div>
+            
+            <div class="dropdown">
+                <a href="#" class="dropbtn"><i class="fas fa-cog"></i> Settings</a>
+                <div class="dropdown-content">
+                    <a href="{% url 'time' %}"><i class="fas fa-clock"></i> Time Schedule</a>
+                    <a href="{% url 'setting_t' %}"><i class="fas fa-exchange-alt"></i> Turnstile</a>
+                </div>
+            </div>
+        </nav>
+    
+    </header>
+
+    <a class="nav-toggle-label hidden-desktop" onclick="toggleNav()">
+        <i class="fas fa-bars"></i>
+    </a>
+
+
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <a href="#"><img src="{% static 'app1/images/logo.png' %}" alt="Logo"></a>
+        </div>
+        
+        <a href="{% url 'sites' %}"><i class="fas fa-globe"></i> Site Management</a>
+        <a href="{% url 'report' %}"><i class="fas fa-chart-bar"></i> Analytics & Reports</a>
+        <a href="{% url 'notification1' %}"><i class="fas fa-bell"></i> Notifications</a>
+        <a href="{% url 'company' %}"><i class="fas fa-building"></i> Company</a>
+        <a href="{% url 'orientation' %}"><i class="fas fa-file-alt"></i> Documents</a>
+
+        <br> <br> 
+
+        <div class="user-info">
+            <div class="user-details">
+                <img src="{% static 'app1/images/admin_image1.jpg' %}" alt="User">
+                <div>
+                    <p>Annette Black</p>
+                    <small>Admin</small>
+                </div>
+            </div>
+        </div>
+        <a href="{% url 'app2_login' %}" class="logout" style="color: red;"><i class="fas fa-sign-out-alt"></i> Log out</a>
+        <a href="#" class="">AssureTech 2024</a>
+    </div>
+
+    <div class="user">
+        <a class="add" href="{% url 'create' %}">Add User</a>
+    </div>
+
+    <div id="table-container">
+
+        <div class="filter-container">
+            <form id="filterForm" method="get" action="{% url 'get_all' %}">
+                <label for="filterName">Name:</label>
+                <input type="text" id="filterName" name="filterName" value="{{ request.GET.filterName|default_if_none:'' }}">
+        
+                <label for="filterCompanyName">Company Name:</label>
+                <input type="text" id="filterCompanyName" name="filterCompanyName" value="{{ request.GET.filterCompanyName|default_if_none:'' }}">
+        
+                <label for="filterJobRole">Job Role:</label>
+                <input type="text" id="filterJobRole" name="filterJobRole" value="{{ request.GET.filterJobRole|default_if_none:'' }}">
+        
+                <label for="filterJobLocation">Job Location:</label>
+                <input type="text" id="filterJobLocation" name="filterJobLocation" value="{{ request.GET.filterJobLocation|default_if_none:'' }}">
+        
+                <label for="filterStatus">Status:</label>
+                <select id="filterStatus" name="filterStatus">
+                    <option value="">All</option>
+                    <option value="active" {% if request.GET.filterStatus == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if request.GET.filterStatus == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+        
+                <button type="submit">Apply Filters</button>
+            </form>
+         
+        </div>
+
+        <form method="post" action="{% url 'delete_selected2' %}">
+            {% csrf_token %}
+        <table id="customers">
+            <tr>
+                <th><input type="checkbox" onClick="toggleAll(this)"></th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('sr', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Sr No
+                    </div>
+                </th>
+                <th>Picture</th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('name', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Name
+                    </div>
+                </th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('company_name', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Company
+                    </div>
+                </th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('job_role', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Job
+                    </div>
+                </th>
+    
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('mycompany_id', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        MC ID
+                    </div>
+                </th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('tag_id', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Tag ID
+                    </div>
+                </th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('job_location', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Location
+                    </div>
+                </th>
+                <th>Email</th>
+                <th>Orientation</th>
+                <th>Facial Data</th>
+                <th>MyComply</th>
+                <th>Expiry Data</th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('status', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Status
+                    </div>
+                </th>
+                <th>Action</th>
+            </tr>
+
+            {% for i in data %}
+            <tr>
+                <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
+                
+                <td>{{i.sr}}</td>
+                <td>
+                    {% if i.picture %}
+                    <img src="{{ i.picture.url }}" alt="user" style="width: 50px; height: auto;">
+                    {% else %}
+                    <img src="{% static 'app1/images/site.jpg' %}" alt="user" style="width: 50px; height: auto;">
+                    {% endif %}
+                </td>
+                <td>{{i.name}}</td>
+                <td>{{i.company_name}}</td>
+                <td>{{i.job_role}}</td>
+                <td>{{i.mycompany_id}}</td>
+                <td>{{i.tag_id}}</td>
+                <td>{{i.job_location}}</td>
+                <td>{{i.email}}</td>
+                {% load custom_filters %}
+                <td>
+                    {% if i.orientation %}
+                    {% with file_extension=i.orientation.name|lower %}
+                    <a href="{{ i.orientation.url }}" target="_blank">
+                        <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                                    {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                                    {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                                    {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                                    {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                                    {% else %}far fa-file
+                                {% endif %}"></i>
+                    </a>
+                    {% endwith %}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                {% load custom_filters %}
+                <td>
+                    {% with file_extension=i.facial_data.name|lower %}
+                    <a href="{% url 'show_facial_data_images' i.pk %}" target="_blank">
+                        <i class="far fa-file-image
+                            {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                            {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                            {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                            {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                            {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                            {% else %}far fa-file
+                            {% endif %}
+                        "></i>
+                    </a>
+                    {% endwith %}
+                </td>
+                <td>
+                    {% if i.my_comply %}
+                    {% with file_extension=i.my_comply.name|lower %}
+                    <a href="{{ i.my_comply.url }}" target="_blank">
+                        <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                                    {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                                    {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                                    {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                                    {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                                    {% else %}far fa-file
+                                {% endif %}"></i>
+                    </a>
+                    {% endwith %}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                <td>{{ i.expiry_date }}</td>
+                <td>{{i.status}}</td>
+                <td>
+                    <div class="dropdownb">
+                        <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
+                        <div class="dropdown-contentb">
+                            <a href="{% url 'user_update' i.sr %}" class="edit-btn">Edit</a>
+                            <a href="{% url 'task_delete' i.pk %}" class="delete-btn">Delete</a>
+                        </div>
+                    </div>
+                </td>
+                
+            </tr>
+            {% endfor %}
+        </table>
+        <button type="submit" class="delete-btn1">Delete Selected</button>
+        <button type="button" class="inactive-btn" onclick="makeInactiveSelected()">Make Inactive</button>
+
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+        
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+        
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <script>
+
+    
+    function toggleFilter(column, currentSortBy) {
+        let newSortBy = column;
+        let newSortOrder = 'asc';
+
+        if (currentSortBy === column) {
+            newSortOrder = 'desc';
+        }
+
+        window.location.href = '/sort_data/?sort_by=' + newSortBy + '&sort_order=' + newSortOrder;
+    }
+
+
+ 
+        document.addEventListener('DOMContentLoaded', function() {
+            const pathName = window.location.pathname;
+            const activeLink = document.querySelector(`.sidebar a[href="${pathName}"]`);
+        
+            if (activeLink) {
+                activeLink.classList.add('activeLink');
+                activeLink.style.color = 'blue'; // Add this line to set the color to blue
+            }
+        });
+        
+
+
+</script>
+
+<script>
+    function toggleNav() {
+        var nav = document.querySelector('.nav');
+        nav.classList.toggle('open');
+        }
+</script>
+     
+</body>
+
+</html>

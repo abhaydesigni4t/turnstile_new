@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>      <!--how this is extra login page-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Page</title>
+{% load static %}
+<link rel="stylesheet" href="styles.css">
+<style>
+    body {
+        font-family: 'Times New Roman', Times, serif;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        overflow: hidden; /* Ensure that the blurred background doesn't overflow */
+        background-image: url('{% static 'app1/images/login_image.jpg' %}'); /* Your background image */
+        background-size: cover;
+        background-position: center;
+    }
+
+    .background-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(217, 213, 300, 0.7); 
+        backdrop-filter: blur(0.3spx); /* Blur effect */
+        z-index: -1; /* Place the overlay behind other content */
+    }
+
+    .logo-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .logo-container img {
+        max-width: 150px;
+        height: auto; 
+        filter: brightness(100%); /* Adjust brightness as needed */
+    
+    }
+
+    .login-container {
+        z-index: 1; /* Ensure the content is above the overlay */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column; /* Arrange logo and card vertically */
+    }
+
+    .login-card {
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 400px;
+    }
+
+    .login-form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .login-form label {
+        margin-bottom: 5px;
+    }
+
+    .login-form input[type="email"],
+    .login-form input[type="password"] {
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .login-form input[type="email"]::placeholder,
+    .login-form input[type="password"]::placeholder {
+        font-size: 14px;
+        color: #999;
+    }
+
+    .login-form button {
+        background-color: #071390;
+        color: white;
+        padding: 15px;
+        border: none;
+        border-radius: 5px;
+        font-size: 18px;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    .login-form button:hover {
+        background-color: #365abf;
+    }
+
+    h2 {
+        text-align: center;
+        margin: 0 0 20px 0;
+    }
+
+    /* Media Queries */
+    @media only screen and (max-width: 768px) {
+        .login-card {
+            width: 80%;
+        }
+    }
+
+    @media only screen and (max-width: 480px) {
+        .login-card {
+            width: 90%;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="background-overlay"></div>
+<div class="login-container">
+    <div class="logo-container">
+        <img src="{% static 'app1/images/logo.png' %}" alt="Assure Tech Logo">
+    </div>
+    <div class="login-card">
+        <h2>Login</h2>
+        <form action="{% url 'login' %}" method="POST" class="login-form">
+            {% csrf_token %}
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Email" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+            {% if form.errors %}
+                <div class="error-message">
+                    {% for field, error in form.errors.items %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+</body>
+</html>

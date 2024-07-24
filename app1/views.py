@@ -365,7 +365,7 @@ class LoginAPIView(APIView):
     
 class AssetCreateAPIView(APIView):
     parser_classes = (MultiPartParser, FormParser,)
-    
+
     def post(self, request, *args, **kwargs):
         serializer = AssetSerializer(data=request.data)
         if serializer.is_valid():
@@ -379,48 +379,55 @@ class AssetListAPIView(generics.ListAPIView):
     queryset = Asset.objects.all()
     serializer_class = AssetSerializer
 
+from django.core.files.storage import default_storage
+from rest_framework import serializers
+
 class UserEnrollListCreateAPIView(generics.ListCreateAPIView):
     queryset = UserEnrolled.objects.all()
     serializer_class = UserEnrolledSerializer
 
     def perform_create(self, serializer):
-        user_instance = serializer.save()
+        email = self.request.data.get('email')
+        if UserEnrolled.objects.filter(email=email).exists():
+            raise serializers.ValidationError("This email already exists.")
+
+        site_name = self.request.data.get('site', None)
+        expiry_date = self.request.data.get('expiry_date', None)
+        
+        site_instance = None
+        if site_name:
+            site_instance = Site.objects.filter(name=site_name).first()
+            if not site_instance:
+                raise serializers.ValidationError("Site does not exist.")
+        
+        user_instance = serializer.save(site=site_instance)
+
+        if expiry_date:
+            user_instance.expiry_date = expiry_date
+            user_instance.save()
+
         # Ensure the user folder exists
         user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', user_instance.get_folder_name())
         os.makedirs(user_folder, exist_ok=True)
-        
-        # Move the picture to the correct folder
-        if self.request.FILES.get('picture'):
-            picture_file = self.request.FILES.get('picture')
+
+        # Move the picture to the correct folder if provided
+        if 'picture' in self.request.FILES:
+            picture_file = self.request.FILES['picture']
             picture_path = os.path.join(user_folder, picture_file.name)
-            
             with open(picture_path, 'wb+') as destination:
                 for chunk in picture_file.chunks():
                     destination.write(chunk)
-            
             user_instance.picture = picture_path
             user_instance.save()
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        for user in queryset:
-            user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', user.get_folder_name())
-            if os.path.exists(user_folder):
-                user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
-                if user_images:
-                    user.picture = os.path.join('facial_data', user.get_folder_name(), user_images[0])
-                else:
-                    user.picture = None
-            else:
-                user.picture = None
         return queryset
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context.update({"request": self.request})
         return context
-    
-    
     
 class UserEnrollDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserEnrolled.objects.all()
@@ -1705,7 +1712,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics, permissions, status
 
 class update_user_api(APIView):
-    
+
     def put(self, request, *args, **kwargs):
         return self.update_user(request)
 
@@ -1721,6 +1728,15 @@ class update_user_api(APIView):
             user_enrolled = UserEnrolled.objects.get(email=email)
         except UserEnrolled.DoesNotExist:
             return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Handle site name
+        site_name = request.data.get('site')
+        if site_name:
+            try:
+                site = Site.objects.get(name=site_name.upper())
+                request.data['site'] = site.id
+            except Site.DoesNotExist:
+                return Response({"detail": "Site with the given name does not exist."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Use the serializer to validate and update data
         serializer = UpdateEnrolledSerializer(user_enrolled, data=request.data, partial=partial)
@@ -1766,8 +1782,14 @@ class update_user_api(APIView):
             data['facial_data'] = request.build_absolute_uri(instance.facial_data.url)
         if 'my_comply' in data:
             data['my_comply'] = request.build_absolute_uri(instance.my_comply.url)
+
+        # Add site name to the response
+        if instance.site:
+            data['site'] = instance.site.name
+
         return data
-    
+
+
 @csrf_exempt
 def delete_user_api(request):
     if request.method == 'DELETE':

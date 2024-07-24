@@ -74,7 +74,7 @@ class UserEnrolled(models.Model):
     orientation = models.FileField(upload_to='attachments/', blank=True, null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
     facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
     my_comply = models.ImageField(upload_to='compliance_images/', blank=True, null=True)
-    expiry_date = models.DateField(default=timezone.now)
+    expiry_date = models.DateField(blank=True, null=True)
     status = models.CharField(max_length=100, choices=[
         ('active', 'Active'),
         ('inactive', 'Inactive'),

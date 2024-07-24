@@ -11,35 +11,62 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField()
 
 class AssetSerializer(serializers.ModelSerializer):
-    picture = serializers.ImageField(max_length=None, use_url=True)
-    footage = serializers.ImageField(max_length=None, use_url=True)
+    picture = serializers.ImageField(max_length=None, use_url=True, required=False)
+    footage = serializers.ImageField(max_length=None, use_url=True, required=False)
+    site = serializers.CharField()  # Field to accept site name
 
     class Meta:
         model = Asset
-        fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'footage', 'description', 'asset_category', 'status']
-    def validate(self, data):
-        # Perform any additional validation here if needed
-        return data
+        fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'footage', 'description', 'asset_category', 'status', 'location', 'time_log', 'site']
+
+    def validate_site(self, value):
+        try:
+            site_instance = Site.objects.get(name=value.upper())
+            return site_instance
+        except Site.DoesNotExist:
+            raise serializers.ValidationError("Site with this name does not exist.")
+
+    def create(self, validated_data):
+        site = validated_data.pop('site')
+        asset = Asset.objects.create(site=site, **validated_data)
+        return asset
     
-    
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.exceptions import ValidationError
+
 
 class UserEnrolledSerializer(serializers.ModelSerializer):
     picture = serializers.SerializerMethodField()
+    site = serializers.SerializerMethodField()
 
     class Meta:
         model = UserEnrolled
-        exclude = ['sr','password','site']
+        exclude = ['sr', 'password']
+        extra_kwargs = {
+            'email': {'validators': []},  # Remove default unique validator
+        }
 
     def get_picture(self, obj):
         request = self.context.get('request')
         user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', obj.get_folder_name())
-        if os.path.exists(user_folder):
-            user_images = [f for f in os.listdir(user_folder) if f.endswith('.jpg') or f.endswith('.jpeg')]
+        if default_storage.exists(user_folder):
+            user_images = [f for f in default_storage.listdir(user_folder)[1] if f.endswith('.jpg') or f.endswith('.jpeg')]
             if user_images:
                 image_path = os.path.join('facial_data', obj.get_folder_name(), user_images[0])
                 image_url = request.build_absolute_uri(settings.MEDIA_URL + image_path)
                 return image_url
         return None
+
+    def get_site(self, obj):
+        if obj.site:
+            return obj.site.name  # Assuming the Site model has a 'name' field
+        return None
+
+    def validate_email(self, value):
+        if UserEnrolled.objects.filter(email=value).exists():
+            raise ValidationError("This email already exists.")
+        return value
     
 class UserEnrolledSerializer1(serializers.ModelSerializer):
     class Meta:
@@ -415,7 +442,6 @@ class BulkUpdateByEmailSerializer(serializers.Serializer):
         ('active', 'Active'),
         ('inactive', 'Inactive'),
     ])
-    
     
     
 

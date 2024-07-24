@@ -128,7 +128,8 @@ urlpatterns = [
     path('delete_user/', views.delete_user_api, name='delete_user'),
     path('bulk_active_inactive/', BulkUpdateByEmailView.as_view(), name='bulk-update-by-email'),
     path('create_subadmin/', views.create_subadmin, name='create_subadmin'),
-    path('subadmin_success/', views.subadmin_success, name='subadmin_success'),
+    path('subadmin_success/', views.subadmin_success, name='subadmin_success'), 
+   
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

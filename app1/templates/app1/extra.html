@@ -10,8 +10,182 @@ make parameter dynamic
 ************************
 
 first read all as a expert
-my project is for multiple sites all sites contain userenrolled,asset model and there is many to one relation between 
-site and userenrolled,asset this is site model "class Site(models.Model):
+this is multiple sites project i have admin that perform every curd operation on data now i created sub-admin 
+this is view to create sub admin "@login_required
+def create_subadmin(request):
+    if request.method == 'POST':
+        form = SubAdminCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_staff = True  # Set the user as a staff member
+            user.is_superuser = False  # Ensure the user is not a superuser
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+
+            # Save the many-to-many data for the 'sites' field
+            sites = form.cleaned_data['sites']
+            user.sites.set(sites)  # Assuming you have a 'sites' field in your CustomUser model
+
+            return redirect('subadmin_success')  # Replace with your success URL name
+        else:
+            # Handle form errors
+            return render(request, 'app1/create_subadmin.html', {'form': form, 'errors': form.errors})
+    else:
+        form = SubAdminCreationForm()
+    return render(request, 'app1/create_subadmin.html', {'form': form})" 
+    this is sub admin form "class SubAdminCreationForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput, required=True)
+    sites = forms.ModelMultipleChoiceField(
+        queryset=Site.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location', 'password', 'sites']"
+
+    so i want to give permission to sub admin that sub admin only perform curd operation on selected site
+    when sub-admin login then show selected sites only other site make disable 
+
+    this is login view sub admin login through this view "@csrf_protect
+    def login_view_new(request):
+        if request.method == 'POST':
+            form = LoginForm_new(request.POST)
+            if form.is_valid():
+                # Convert email to lowercase before authentication
+                email = form.cleaned_data.get('email').lower()
+                password = form.cleaned_data.get('password')
+                user = authenticate(request, email=email, password=password)
+                if user is not None:
+                    login(request, user)
+                    messages.success(request, 'Login successful.')
+                    return redirect('sites')
+                else:
+                    messages.error(request, 'Invalid email or password.')
+        else:
+            form = LoginForm_new()
+        return render(request, 'app1/signup.html', {'form': form, 'is_login_page': True})" 
+
+this is site model ""
+
+
+
+
+
+
+
+
+
+could not fetch file contents
+
+**********************************
+
+i want to give same site name that exist in site model 
+here this api takes site value like site : 2 
+this is model "class UserEnrolled(models.Model):
+sr = models.AutoField(primary_key=True, unique=True)
+picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
+name = models.CharField(max_length=255)
+company_name = models.CharField(max_length=100)
+job_role = models.CharField(max_length=100)
+mycompany_id = models.CharField(max_length=10)
+tag_id = models.CharField(max_length=50)
+job_location = models.CharField(max_length=100)
+orientation = models.FileField(upload_to='attachments/', blank=True, null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
+facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
+my_comply = models.ImageField(upload_to='compliance_images/', blank=True, null=True)
+expiry_date = models.DateField(blank=True, null=True)
+status = models.CharField(max_length=100, choices=[
+    ('active', 'Active'),
+    ('inactive', 'Inactive'),
+], default='active')
+email = models.EmailField()
+password = models.CharField(max_length=50)
+site = models.ForeignKey('Site', on_delete=models.CASCADE, blank=True, null=True)
+
+def _str_(self):
+    return self.name
+
+def get_folder_name(self):
+    return self.name
+
+def set_password(self, raw_password):
+    self.password = make_password(raw_password)
+
+def check_password(self, raw_password):
+    return check_password(raw_password, self.password)"
+
+this is api "class update_user_api(APIView):
+
+def put(self, request, *args, **kwargs):
+    return self.update_user(request)
+
+def patch(self, request, *args, **kwargs):
+    return self.update_user(request, partial=True)
+
+def update_user(self, request, partial=False):
+    email = request.data.get('email')
+    if not email:
+        return Response({"detail": "Email parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user_enrolled = UserEnrolled.objects.get(email=email)
+    except UserEnrolled.DoesNotExist:
+        return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Use the serializer to validate and update data
+    serializer = UpdateEnrolledSerializer(user_enrolled, data=request.data, partial=partial)
+    if serializer.is_valid():
+        updated_fields = self.perform_update(serializer, request, user_enrolled)
+        response_data = {field: serializer.data[field] for field in updated_fields}
+        response_data = self.add_full_image_urls(response_data, user_enrolled)
+        return Response(response_data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+def perform_update(self, serializer, request, user_enrolled):
+    # Save the instance while keeping the password unchanged
+    instance = serializer.instance
+    password = instance.password
+    serializer.save(password=password)
+
+    # Ensure the user's folder exists
+    user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', user_enrolled.get_folder_name())
+    os.makedirs(user_folder, exist_ok=True)
+
+    # Update `facial_data` specifically
+    if 'facial_data' in request.FILES:
+        file = request.FILES['facial_data']
+        file_path = os.path.join(user_folder, file.name)
+        with open(file_path, 'wb+') as destination:
+            for chunk in file.chunks():
+                destination.write(chunk)
+        instance.facial_data = file_path
+        instance.picture = file_path  # Update the picture field as well
+        instance.save()
+
+    # Get the list of updated fields
+    return serializer.validated_data.keys()
+
+def add_full_image_urls(self, data, instance):
+    # Add full URLs for image fields
+    request = self.request
+    if 'picture' in data:
+        data['picture'] = request.build_absolute_uri(instance.picture.url)
+    if 'orientation' in data:
+        data['orientation'] = request.build_absolute_uri(instance.orientation.url)
+    if 'facial_data' in data:
+        data['facial_data'] = request.build_absolute_uri(instance.facial_data.url)
+    if 'my_comply' in data:
+        data['my_comply'] = request.build_absolute_uri(instance.my_comply.url)
+    return data
+" 
+this is serializer "class UpdateEnrolledSerializer(serializers.ModelSerializer):
+class Meta:
+    model = UserEnrolled
+    exclude = ['password']" 
+
+userenrolled model having relation with site model this is site model "class Site(models.Model):
 picture = models.ImageField(upload_to='site_pictures/', blank=True, null=True)
 name = models.CharField(max_length=100,unique=True)
 location = models.CharField(max_length=100)
@@ -21,236 +195,4 @@ def save(self, *args, **kwargs):
     super(Site, self).save(*args, **kwargs)
     
 def __str__(self):
-    return self.name" this is userenrolled model "class UserEnrolled(models.Model):
-    sr = models.AutoField(primary_key=True, unique=True)
-    picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
-    name = models.CharField(max_length=255)
-    company_name = models.CharField(max_length=100)
-    job_role = models.CharField(max_length=100)
-    mycompany_id = models.CharField(max_length=10)
-    tag_id = models.CharField(max_length=50)
-    job_location = models.CharField(max_length=100)
-    orientation = models.FileField(upload_to='attachments/', blank=True, null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
-    facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
-    my_comply = models.ImageField(upload_to='compliance_images/', blank=True, null=True)
-    expiry_date = models.DateField(default=timezone.now)
-    status = models.CharField(max_length=100, choices=[
-        ('active', 'Active'),
-        ('inactive', 'Inactive'),
-    ], default='active')
-    email = models.EmailField()
-    password = models.CharField(max_length=50)
-    site = models.ForeignKey('Site', on_delete=models.CASCADE, blank=True, null=True)
-
-    def _str_(self):
-        return self.name
-
-    def get_folder_name(self):
-        return self.name
-
-    def set_password(self, raw_password):
-        self.password = make_password(raw_password)
-
-    def check_password(self, raw_password):
-        return check_password(raw_password, self.password)" 
-    
-this is asset model "class Asset(models.Model):
-asset_id = models.IntegerField(unique=True)
-picture = models.ImageField(upload_to='asset_pictures/', blank=True, null=True)
-asset_name = models.CharField(max_length=255)
-tag_id = models.IntegerField()
-footage = models.ImageField(upload_to='assets_footage/', blank=True, null=True, verbose_name='Footage')
-description = models.CharField(max_length=500)
-asset_category = models.CharField(max_length=50)
-STATUS_CHOICES = [
-    ('active', 'Active'),
-    ('inactive', 'Inactive'),
-]
-status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='inactive')
-location = models.CharField(max_length=100, blank=True, null=True)
-time_log = models.DateTimeField(auto_now=True)
-site = models.ForeignKey('Site', on_delete=models.CASCADE)
-
-def _str_(self):
-    return self.asset_name
-
-def check_file_exists(self, file_field):
-    if file_field and os.path.isfile(os.path.join(settings.MEDIA_ROOT, file_field.name)):
-        return True
-    return False
-
-def check_picture_exists(self):
-    return self.check_file_exists(self.picture)
-
-def check_footage_exists(self):
-    return self.check_file_exists(self.footage)
-
-" this is get site view "def site_view(request):
-sites = Site.objects.annotate(
-    total_users=Count('userenrolled'),
-    active_users=Count('userenrolled', filter=Q(userenrolled__status='active')),
-    inactive_users=Count('userenrolled', filter=Q(userenrolled__status='inactive'))
-)
-
-return render(request, 'app1/site.html', {
-    'sites': sites,
-})
-" this get all sites this is site.html "<div id="table-container">
-    <table id="customers">
-        <tr>
-            <th>Picture</th>
-            <th>Site Name</th>
-            <th>Location</th>
-            <th>Total Worker</th>
-            <th>Active Worker</th>
-            <th>Inactive Worker</th>
-            <th>Status</th>
-            <th>Manage</th>
-            <th>Actions</th>
-        </tr>
-        {% for site in sites %}
-        <tr>
-            <td>
-                {% if site.picture %}
-                <img src="{{ site.picture.url }}" alt="Site" style="width: 50px; height: auto;">
-                {% else %}
-                <img src="{% static 'app1/images/site.jpg' %}" alt="Site" style="width: 50px; height: auto;">
-                {% endif %}
-            </td>
-            <td><a href="{% url 'get_all' %}?site_name={{ site.name }}">{{ site.name }}</a></td>
-            <td>{{ site.location }}</td>
-            <td>{{ site.total_users }}</td>
-            <td>{{ site.active_users }}</td>
-            <td>{{ site.inactive_users }}</td>
-            <td>Ongoing</td>
-            <td class="table-actions">
-                <a href="#" class="btn-icon"><i class="fas fa-user"></i></a>
-                <a href="#" class="btn-icon"><i class="fas fa-cog"></i></a>
-            </td>
-            <td>
-                <div class="dropdownb">
-                    <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
-                    <div class="dropdown-contentb">
-                        <a href="{% url 'edit_sites' site.id %}" class="edit-btn">Edit</a>
-                        <a href="{% url 'delete_sites' site.pk %}" class="delete-btn">Delete</a>
-                    </div>
-                </div>
-            </td>
-            
-        </tr>
-        {% endfor %}
-    </table>" when i click on any site form this is return related userenrolled user data this is get user data
-    view "class get_data(ListView):
-    model = UserEnrolled
-    template_name = 'app1/getdata.html'
-    context_object_name = 'data'
-    paginate_by = 3
-
-    def get_queryset(self):
-        queryset = UserEnrolled.objects.all()
-
-        # Get site name from URL parameters
-        site_name = self.request.GET.get('site_name')
-
-        # Filter by site name if provided
-        if site_name:
-            queryset = queryset.filter(site__name=site_name)
-
-        # Other filters
-        filter_name = self.request.GET.get('filterName')
-        filter_company_name = self.request.GET.get('filterCompanyName')
-        filter_job_role = self.request.GET.get('filterJobRole')
-        filter_job_location = self.request.GET.get('filterJobLocation')
-        filter_status = self.request.GET.get('filterStatus')
-
-        if filter_name:
-            queryset = queryset.filter(name__icontains=filter_name)
-        if filter_company_name:
-            queryset = queryset.filter(company_name__icontains=filter_company_name)
-        if filter_job_role:
-            queryset = queryset.filter(job_role__icontains=filter_job_role)
-        if filter_job_location:
-            queryset = queryset.filter(job_location__icontains=filter_job_location)
-        if filter_status:
-            queryset = queryset.filter(status__iexact=filter_status)
-
-        return queryset
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        page = self.request.GET.get('page')
-        paginator = Paginator(self.get_queryset(), self.paginate_by)
-        page_obj = paginator.get_page(page)
-        offset = self.paginate_by * (page_obj.number - 1)
-        context['offset'] = offset
-        context['page_obj'] = page_obj
-        context['paginator'] = paginator
-        return context
-    " and this is url "path('get_all/',get_data.as_view(),name='get_all'),"
-
-    when i click on any project to see related user then it correctly returns user and url make like this 
-    suppose i click on project1 "http://127.0.0.1:8000/get_all/?site_name=PROJECT%201" 
-    this all work corretly so i was in project1 related user page on this page there is link to get asset data
-    this is link "<a href="{% url 'asset_site' %}"><i class="fas fa-tasks"></i> Asset Management</a>" 
-    this is url for get asset data view "path('asset_site/',views.asset_site,name='asset_site'),"
-    and this is view "def asset_site(request):
-    site_id = request.GET.get('site_id')
-    if site_id:
-        assets = Asset.objects.filter(site_id=site_id)
-    else:
-        assets = Asset.objects.all()
-    
-    paginator = Paginator(assets, 8)
-    page_number = request.GET.get('page')
-    assets = paginator.get_page(page_number)
-    
-    sites = Site.objects.all()
-    
-    return render(request, 'app1/asset_site.html', {'assets': assets, 'sites': sites, 'selected_site_id': site_id})"
-
-    so now i want when i site page and select any site to see that site user and url make like this "http://127.0.0.1:8000/get_all/?site_name=PROJECT%201"
-    now i want when i click on Asset management link then i want asset data that related to that site
-    so how to make this url "http://127.0.0.1:8000/get_all/?site_name=PROJECT%201" dynamic to get asset data
-
-
-    ***********************************
-
-see this view "
-    def asset_site(request):
-    site_name = request.GET.get('site_name')
-    if site_name:
-        try:
-            site = Site.objects.get(name=site_name)
-            assets = Asset.objects.filter(site=site)
-        except Site.DoesNotExist:
-            assets = Asset.objects.none()
-    else:
-        assets = Asset.objects.all()
-
-    paginator = Paginator(assets, 8)
-    page_number = request.GET.get('page')
-    assets = paginator.get_page(page_number)
-
-    sites = Site.objects.all()
-
-    return render(request, 'app1/asset_site.html', {'assets': assets, 'sites': sites, 'selected_site_name': site_name})
-" this is url "path('asset_site/',views.asset_site,name='asset_site')," and i use this link to get data "<a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-tasks"></i> Asset Management</a>"
-like this i want to modify this view 
-"
-    def onsite_user(request):
-    site_name = request.GET.get('site_name')
-    queryset = OnSiteUser.objects.all()
-
-    if site_name:
-        try:
-            site = Site.objects.get(name=site_name)
-            queryset = queryset.filter(site=site)
-        except Site.DoesNotExist:
-            queryset = OnSiteUser.objects.none()
-
-    paginator = Paginator(queryset, 10)
-    page_number = request.GET.get('page')
-    on_site_users = paginator.get_page(page_number)
-    return render(request, 'app1/onsite_user.html', {'on_site_users': on_site_users, 'site_name': site_name})
-"
-this is url "path('onsite_user/',views.onsite_user,name='onsite_user')," and this "            <a href="{% url 'onsite_user' %}?site_name={{ site_name }}"><i class="fas fa-user-check"></i> On Site User</a>" is link to get data modify this 
+    return self.name"

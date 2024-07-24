@@ -84,7 +84,7 @@
             font-size: 14px;
             text-decoration: none;
             display: inline-block;
-            margin-right: 25px;
+            margin-right: 2px;
             transition: color 0.3s ease;
         }
     
@@ -498,9 +498,10 @@
 
       
         <nav class="nav">
-            <a href="{% url 'asset_site' %}"><i class="fas fa-tasks"></i> Asset Management</a>
-            <a href="{% url 'site_docu' %}"><i class="fas fa-file-alt"></i> Site Documents</a>
-            <a href="{% url 'onsite_user' %}"><i class="fas fa-user-check"></i> On Site User</a>
+            <a href="{% url 'get_all' %}"><i class="fas fa-users"></i>User Management</a>
+            <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-tasks"></i> Asset Management</a>
+            <a href="{% url 'site_docu' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-file-alt"></i> Site Documents</a>
+            <a href="{% url 'onsite_user' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-user-check"></i> On Site User</a>
             <div class="dropdown">
                 <a href="#" class="dropbtn"><i class="fas fa-language"></i> Language</a>
                 <div class="dropdown-content">

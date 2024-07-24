@@ -190,6 +190,8 @@ class TaskDeleteView(DeleteView):
     model = UserEnrolled
     template_name = 'app1/data_confirm_delete.html'
     success_url = reverse_lazy('get_all')
+    
+    
 
 @csrf_protect
 def login_view(request):
@@ -263,13 +265,23 @@ def delete_asset(request, asset_id):
     return render(request, 'app1/data_confirm_delete9.html', {'asset': asset})
 
 def asset_site(request):
-    assets = Asset.objects.all()
-    paginator = Paginator(assets, 8)
+    site_name = request.GET.get('site_name')
+    if site_name:
+        try:
+            site = Site.objects.get(name=site_name)
+            assets = Asset.objects.filter(site=site)
+        except Site.DoesNotExist:
+            assets = Asset.objects.none()
+    else:
+        assets = Asset.objects.all()
 
+    paginator = Paginator(assets, 8)
     page_number = request.GET.get('page')
     assets = paginator.get_page(page_number)
 
-    return render(request, 'app1/asset_site.html', {'assets': assets})
+    sites = Site.objects.all()
+
+    return render(request, 'app1/asset_site.html', {'assets': assets, 'sites': sites, 'selected_site_name': site_name})
 
 def asset_details(request, asset_id):
     asset = get_object_or_404(Asset, asset_id=asset_id)
@@ -425,7 +437,6 @@ class ExitListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = ExitSerializer
     
     
-
 class ExitDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Asset.objects.all()
     serializer_class = ExitSerializer
@@ -783,8 +794,24 @@ def site_document(request):
     return render(request,'app1/site_documents.html')
 
 def preshift(request):
-    documents = PreShift.objects.all()
-    return render(request,'app1/preshift.html',{'documents' : documents})
+    site_name = request.GET.get('site_name')
+    queryset = PreShift.objects.all()
+
+    if site_name:
+        try:
+            site = Site.objects.get(name=site_name)
+            queryset = queryset.filter(site=site)
+            print(f"Site found: {site.name}")  # Debugging print statement
+        except Site.DoesNotExist:
+            queryset = PreShift.objects.none()
+            print(f"Site not found: {site_name}")  # Debugging print statement
+
+    paginator = Paginator(queryset, 10)  # 10 items per page
+    page_number = request.GET.get('page')
+    preshifts = paginator.get_page(page_number)
+
+    return render(request, 'app1/preshift.html', {'preshifts': preshifts, 'site_name': site_name})
+
 
 def add_preshift(request):
     if request.method == 'POST':
@@ -819,8 +846,24 @@ def delete_preshift(request, pk):
     return render(request, 'app1/data_confirm_delete7.html', {'preshift': preshift})
 
 def toolbox(request):
-    documents = ToolBox.objects.all()
-    return render(request,'app1/toolbox.html',{'documents' : documents})
+    site_name = request.GET.get('site_name')
+    queryset = ToolBox.objects.all()
+
+    if site_name:
+        try:
+            site = Site.objects.get(name=site_name)
+            queryset = queryset.filter(site=site)
+            print(f"Site found: {site.name}")  # Debugging print statement
+        except Site.DoesNotExist:
+            queryset = ToolBox.objects.none()
+            print(f"Site not found: {site_name}")  # Debugging print statement
+
+    paginator = Paginator(queryset, 10)  # 10 items per page
+    page_number = request.GET.get('page')
+    toolbox_talks = paginator.get_page(page_number)
+
+    return render(request, 'app1/toolbox.html', {'toolbox_talks': toolbox_talks, 'site_name': site_name})
+
 
 def add_toolbox(request):
     if request.method == 'POST':
@@ -1098,13 +1141,25 @@ def upload_facial_data_image(request, user_id):
 from .models import OnSiteUser
 
 def onsite_user(request):
-    user = OnSiteUser.objects.all()
-    paginator = Paginator(user, 10)
+    site_name = request.GET.get('site_name')
+    queryset = OnSiteUser.objects.all()
 
+    if site_name:
+        try:
+            site = Site.objects.get(name=site_name)
+            queryset = queryset.filter(site=site)
+            print(f"Site found: {site.name}")  # Debugging print statement
+        except Site.DoesNotExist:
+            queryset = OnSiteUser.objects.none()
+            print(f"Site not found: {site_name}")  # Debugging print statement
+
+    paginator = Paginator(queryset, 10)  # 10 items per page
     page_number = request.GET.get('page')
-    user = paginator.get_page(page_number)
-    return render(request, 'app1/onsite_user.html', {'user': user})
+    on_site_users = paginator.get_page(page_number)
 
+    sites = Site.objects.all()  # Get all sites to display in the template
+
+    return render(request, 'app1/onsite_user.html', {'on_site_users': on_site_users, 'sites': sites, 'selected_site_name': site_name})
 
 def delete_selected5(request):
     if request.method == 'POST':
@@ -1528,8 +1583,9 @@ class LoginView_new(APIView):
         return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
 
 from .forms import SignUpForm_new
+from django.views.decorators.csrf import csrf_exempt
 
-@csrf_protect
+@csrf_exempt
 def signup_view_new(request):
     if request.method == 'POST':
         form = SignUpForm_new(request.POST)
@@ -1757,20 +1813,76 @@ class BulkUpdateByEmailView(views.APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-from rest_framework import generics, permissions
-from .models import CustomUser
-from .serializers import SubAdminSerializer
 
-class CreateSubAdminView(generics.CreateAPIView):
-    queryset = CustomUser.objects.all()
-    serializer_class = SubAdminSerializer
-    permission_classes = [permissions.IsAdminUser]  # Ensure only admins can access this endpoint
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .forms import SubAdminCreationForm
+
+@login_required
+def create_subadmin(request):
+    if request.method == 'POST':
+        form = SubAdminCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_staff = True  # Set the user as a staff member
+            user.is_superuser = False  # Ensure the user is not a superuser
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+
+            # Save the many-to-many data for the 'sites' field
+            sites = form.cleaned_data['sites']
+            user.sites.set(sites)  # Assuming you have a 'sites' field in your CustomUser model
+
+            return redirect('subadmin_success')  # Replace with your success URL name
+        else:
+            # Handle form errors
+            return render(request, 'app1/create_subadmin.html', {'form': form, 'errors': form.errors})
+    else:
+        form = SubAdminCreationForm()
+    return render(request, 'app1/create_subadmin.html', {'form': form})
 
 
-from rest_framework import generics
-from .permissions import IsSuperAdmin
 
-class CreateSubAdminView(generics.CreateAPIView):
-    queryset = CustomUser.objects.all()
-    serializer_class = SubAdminSerializer
-    permission_classes = [IsSuperAdmin]  # Use custom permission
+@login_required
+def subadmin_success(request):
+    return render(request, 'app1/subadmin_success.html')
+
+
+from django.contrib.auth.mixins import UserPassesTestMixin
+
+class SitePermissionMixin:
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user_sites = self.request.user.sites.all()
+        permitted_site_names = [site.name for site in user_sites]
+        return queryset.filter(site__name__in=permitted_site_names)
+
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+  
+'''
+
+class create_data(LoginRequiredMixin, SitePermissionMixin, CreateView):
+    model = UserEnrolled
+    form_class = YourModelForm
+    template_name = 'app1/add_user.html'
+    success_url = reverse_lazy('get_all')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['data'] = UserEnrolled.objects.all()
+        return context
+
+class UpdateData(LoginRequiredMixin, SitePermissionMixin, UpdateView):
+    model = UserEnrolled
+    fields = ['name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location', 'orientation', 'facial_data', 'my_comply', 'expiry_date', 'status', 'email', 'site']
+    template_name = 'app1/add_user.html'
+    success_url = reverse_lazy('get_all')
+
+class TaskDeleteView(LoginRequiredMixin, SitePermissionMixin, DeleteView):
+    model = UserEnrolled
+    template_name = 'app1/data_confirm_delete.html'
+    success_url = reverse_lazy('get_all')
+    
+    
+    '''

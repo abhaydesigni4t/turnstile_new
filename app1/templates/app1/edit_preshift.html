@@ -333,9 +333,9 @@
       
         <nav class="nav">
             <a href="{% url 'get_all' %}"><i class="fas fa-users"></i>User Management</a>
-            <a href="{% url 'asset_site' %}"><i class="fas fa-tasks"></i> Asset Management</a>
-            <a href="{% url 'site_docu' %}"><i class="fas fa-file-alt"></i> Site Documents</a>
-            <a href="{% url 'onsite_user' %}"><i class="fas fa-user-check"></i> On Site User</a>
+            <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-tasks"></i> Asset Management</a>
+            <a href="{% url 'site_docu' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-file-alt"></i> Site Documents</a>
+            <a href="{% url 'onsite_user' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-user-check"></i> On Site User</a>
                 
             
             <div class="dropdown">

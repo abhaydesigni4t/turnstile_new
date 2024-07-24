@@ -472,6 +472,36 @@
             margin-left: 5px;
         }
 
+
+        /* Add this CSS to your styles file or inside a <style> tag in your HTML head */
+            .dropdown-container {
+                position: relative;
+                display: inline-block;
+            }
+            
+            .dropdown-container .dropdown-content {
+                display: none;
+                position: absolute;
+                background-color: white;
+                min-width: 200px;
+                box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                z-index: 1;
+            }
+            
+            .dropdown-container:hover .dropdown-content {
+                display: block;
+            }
+            
+            .dropdown-container .dropdown-content form {
+                padding: 10px;
+            }
+            
+            .dropdown-container select {
+                width: 100%;
+                padding: 8px;
+                font-size: 16px;
+            }
+            
     </style>
 </head>
 
@@ -483,9 +513,10 @@
        
         <nav class="nav">
             <a href="{% url 'get_all' %}"><i class="fas fa-users"></i>User Management</a>
-            <a href="{% url 'asset_site' %}"><i class="fas fa-tasks"></i> Asset Management</a>
-            <a href="{% url 'site_docu' %}"><i class="fas fa-file-alt"></i> Site Documents</a>
-            <a href="{% url 'onsite_user' %}"><i class="fas fa-user-check"></i> On Site User</a>
+        
+            <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-tasks"></i> Asset Management</a>
+            <a href="{% url 'site_docu' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-file-alt"></i> Site Documents</a>
+            <a href="{% url 'onsite_user' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-user-check"></i> On Site User</a>
             <a class="exit" href="{% url 'exit' %}"><i class="fas fa-sign-out-alt"></i> Exit Status</a>
             <div class="dropdown">
                 <a href="#" class="dropbtn"><i class="fas fa-language"></i> Language</a>
@@ -544,7 +575,6 @@
         <div class="user">
             <a class="add" href="{% url 'add_asset' %}" class="add-new-button">Add New</a>
         </div>
-    
     
         <div id="table-container">
             <table id="customers">

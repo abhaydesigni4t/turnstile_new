@@ -98,12 +98,12 @@ class OrientationForm(forms.ModelForm):
 class PreshitForm(forms.ModelForm):
     class Meta:
         model = PreShift
-        fields = ['document']
+        fields = ['document','site']
 
 class ToolboxForm(forms.ModelForm):
     class Meta:
         model = ToolBox
-        fields = ['document']
+        fields = ['document','site']
 
 
 from django import forms
@@ -169,3 +169,19 @@ class SignUpForm_new(forms.ModelForm):
 class LoginForm_new(forms.Form):
     email = forms.EmailField(max_length=254, required=True)
     password = forms.CharField(widget=forms.PasswordInput, required=True)
+    
+
+from django import forms
+from .models import CustomUser, Site
+
+class SubAdminCreationForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput, required=True)
+    sites = forms.ModelMultipleChoiceField(
+        queryset=Site.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location', 'password', 'sites']

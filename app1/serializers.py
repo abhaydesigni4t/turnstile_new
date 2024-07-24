@@ -17,7 +17,6 @@ class AssetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'footage', 'description', 'asset_category', 'status']
-
     def validate(self, data):
         # Perform any additional validation here if needed
         return data
@@ -29,7 +28,7 @@ class UserEnrolledSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserEnrolled
-        fields = ['picture', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location', 'orientation', 'status']
+        exclude = ['sr','password','site']
 
     def get_picture(self, obj):
         request = self.context.get('request')
@@ -419,17 +418,4 @@ class BulkUpdateByEmailSerializer(serializers.Serializer):
     
     
     
-from .models import CustomUser
 
-class SubAdminSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ['email', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
-
-    def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = CustomUser.objects.create_subadmin(**validated_data)
-        user.set_password(password)
-        user.save()
-        return user

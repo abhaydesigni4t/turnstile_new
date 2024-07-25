@@ -301,18 +301,31 @@ def exit(request):
 
 
 from django.db.models import Count, Q
+from django.contrib.auth.decorators import login_required
 
+@login_required
 def site_view(request):
-    sites = Site.objects.annotate(
-        total_users=Count('userenrolled'),
-        active_users=Count('userenrolled', filter=Q(userenrolled__status='active')),
-        inactive_users=Count('userenrolled', filter=Q(userenrolled__status='inactive'))
-    )
-    
+    user = request.user
+
+    if user.is_staff and not user.is_superuser:
+        # If the user is a sub-admin, filter the sites based on the user's permissions
+        sites = user.sites.annotate(
+            total_users=Count('userenrolled'),
+            active_users=Count('userenrolled', filter=Q(userenrolled__status='active')),
+            inactive_users=Count('userenrolled', filter=Q(userenrolled__status='inactive'))
+        )
+    else:
+        # If the user is a super admin, show all sites
+        sites = Site.objects.annotate(
+            total_users=Count('userenrolled'),
+            active_users=Count('userenrolled', filter=Q(userenrolled__status='active')),
+            inactive_users=Count('userenrolled', filter=Q(userenrolled__status='inactive'))
+        )
+
     return render(request, 'app1/site.html', {
         'sites': sites,
     })
-
+    
 def time_shedule(request):
     return render(request,'app1/time_shedule.html')
 
@@ -1690,7 +1703,7 @@ class SignupUserUpdateView(APIView):
         except get_user_model().DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
    
-from .serializers import UserEnrolledSerializerExpiry,UpdateEnrolledSerializer
+from .serializers import UserEnrolledSerializerExpiry
      
     
     
@@ -1710,8 +1723,14 @@ class ExpiryPostAPIView(APIView):
     
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics, permissions, status
+from django.core.files import File
+
+
+'''
+from rest_framework.parsers import MultiPartParser, FormParser
 
 class update_user_api(APIView):
+    parser_classes = (MultiPartParser, FormParser,)
 
     def put(self, request, *args, **kwargs):
         return self.update_user(request)
@@ -1742,7 +1761,7 @@ class update_user_api(APIView):
         serializer = UpdateEnrolledSerializer(user_enrolled, data=request.data, partial=partial)
         if serializer.is_valid():
             updated_fields = self.perform_update(serializer, request, user_enrolled)
-            response_data = {field: serializer.data[field] for field in updated_fields}
+            response_data = {field: serializer.data.get(field) for field in updated_fields}
             response_data = self.add_full_image_urls(response_data, user_enrolled)
             return Response(response_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -1754,19 +1773,22 @@ class update_user_api(APIView):
         serializer.save(password=password)
 
         # Ensure the user's folder exists
-        user_folder = os.path.join(settings.MEDIA_ROOT, 'facial_data', user_enrolled.get_folder_name())
+        user_folder = os.path.join(settings.MEDIA_ROOT, 'user_pictures', user_enrolled.get_folder_name())
         os.makedirs(user_folder, exist_ok=True)
 
-        # Update `facial_data` specifically
-        if 'facial_data' in request.FILES:
-            file = request.FILES['facial_data']
-            file_path = os.path.join(user_folder, file.name)
-            with open(file_path, 'wb+') as destination:
-                for chunk in file.chunks():
-                    destination.write(chunk)
-            instance.facial_data = file_path
-            instance.picture = file_path  # Update the picture field as well
-            instance.save()
+        # Update file fields if present in request.FILES
+        for field_name in ['orientation', 'facial_data', 'my_comply']:
+            if field_name in request.FILES:
+                file = request.FILES[field_name]
+                file_path = os.path.join(user_folder, file.name)
+                with open(file_path, 'wb+') as destination:
+                    for chunk in file.chunks():
+                        destination.write(chunk)
+                setattr(instance, field_name, file_path)
+            elif field_name not in request.data:  # Handle case where field is not in request at all
+                setattr(instance, field_name, None)
+
+        instance.save()
 
         # Get the list of updated fields
         return serializer.validated_data.keys()
@@ -1777,19 +1799,19 @@ class update_user_api(APIView):
         if 'picture' in data:
             data['picture'] = request.build_absolute_uri(instance.picture.url)
         if 'orientation' in data:
-            data['orientation'] = request.build_absolute_uri(instance.orientation.url)
+            data['orientation'] = request.build_absolute_uri(instance.orientation.url) if instance.orientation else None
         if 'facial_data' in data:
-            data['facial_data'] = request.build_absolute_uri(instance.facial_data.url)
+            data['facial_data'] = request.build_absolute_uri(instance.facial_data.url) if instance.facial_data else None
         if 'my_comply' in data:
-            data['my_comply'] = request.build_absolute_uri(instance.my_comply.url)
+            data['my_comply'] = request.build_absolute_uri(instance.my_comply.url) if instance.my_comply else None
 
         # Add site name to the response
         if instance.site:
             data['site'] = instance.site.name
 
         return data
-
-
+'''
+    
 @csrf_exempt
 def delete_user_api(request):
     if request.method == 'DELETE':
@@ -1847,22 +1869,19 @@ def create_subadmin(request):
         form = SubAdminCreationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_staff = True  # Set the user as a staff member
-            user.is_superuser = False  # Ensure the user is not a superuser
+            user.is_staff = True
+            user.is_superuser = False
             user.set_password(form.cleaned_data['password'])
             user.save()
-
-            # Save the many-to-many data for the 'sites' field
             sites = form.cleaned_data['sites']
-            user.sites.set(sites)  # Assuming you have a 'sites' field in your CustomUser model
-
-            return redirect('subadmin_success')  # Replace with your success URL name
+            user.sites.set(sites)
+            return redirect('subadmin_success')
         else:
-            # Handle form errors
             return render(request, 'app1/create_subadmin.html', {'form': form, 'errors': form.errors})
     else:
         form = SubAdminCreationForm()
     return render(request, 'app1/create_subadmin.html', {'form': form})
+
 
 
 
@@ -1908,3 +1927,57 @@ class TaskDeleteView(LoginRequiredMixin, SitePermissionMixin, DeleteView):
     
     
     '''
+
+from . serializers import UserEnrolledSerializer_update
+
+class UserEnrolledUpdateAPIView_n(generics.UpdateAPIView):
+    queryset = UserEnrolled.objects.all()
+    serializer_class = UserEnrolledSerializer_update
+
+    def get_object(self):
+        email = self.request.data.get('email')
+        if email is None:
+            raise serializers.ValidationError("Email parameter is required for update.")
+        return get_object_or_404(UserEnrolled, email=email)
+
+    def update(self, request, *args, **kwargs):
+        # Get the original instance
+        instance = self.get_object()
+        original_data = self.get_serializer(instance).data
+
+        # Ensure that the password field is not updated
+        data = request.data.copy()
+        if 'password' in data:
+            data.pop('password')
+
+        # Validate and retrieve the site if provided
+        site_name = data.get('site', None)
+        if site_name:
+            try:
+                site = Site.objects.get(name=site_name)
+                data['site'] = site.pk  # Store the primary key instead of the entire object
+            except Site.DoesNotExist:
+                return Response({"error": "The specified site does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create the serializer with the updated data
+        serializer = self.get_serializer(instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # Save the instance
+        self.perform_update(serializer)
+
+        # Get the updated data
+        updated_data = serializer.data
+
+        # Construct a response containing only the changed fields
+        changed_fields = {field: updated_data[field] for field in updated_data if updated_data[field] != original_data[field]}
+        
+        # Ensure site_name is included in the response
+        if 'site' in changed_fields:
+            changed_fields['site'] = site_name
+
+        # Return the response with only the updated fields
+        return Response(changed_fields)
+
+    def perform_update(self, serializer):
+        serializer.save(password=self.get_object().password)  # Keep the original password

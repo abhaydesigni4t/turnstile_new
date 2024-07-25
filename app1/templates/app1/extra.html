@@ -67,7 +67,22 @@ def create_subadmin(request):
             form = LoginForm_new()
         return render(request, 'app1/signup.html', {'form': form, 'is_login_page': True})" 
 
-this is site model ""
+        this is login form "
+        class LoginForm_new(forms.Form):
+            email = forms.EmailField(max_length=254, required=True)
+            password = forms.CharField(widget=forms.PasswordInput, required=True)"
+
+this is site model "class Site(models.Model):
+picture = models.ImageField(upload_to='site_pictures/', blank=True, null=True)
+name = models.CharField(max_length=100,unique=True)
+location = models.CharField(max_length=100)
+
+def save(self, *args, **kwargs):
+    self.name = self.name.upper()
+    super(Site, self).save(*args, **kwargs)
+    
+def __str__(self):
+    return self.name"
 
 
 
@@ -77,12 +92,107 @@ this is site model ""
 
 
 
-could not fetch file contents
+yes in asset management , onsite user function is write code of get site_name 
+see this is asset get view "def asset_site(request):
+site_name = request.GET.get('site_name')
+if site_name:
+    try:
+        site = Site.objects.get(name=site_name)
+        assets = Asset.objects.filter(site=site)
+    except Site.DoesNotExist:
+        assets = Asset.objects.none()
+else:
+    assets = Asset.objects.all()
+
+paginator = Paginator(assets, 8)
+page_number = request.GET.get('page')
+assets = paginator.get_page(page_number)
+
+sites = Site.objects.all()
+
+return render(request, 'app1/asset_site.html', {'assets': assets, 'sites': sites, 'selected_site_name': site_name})"
+
+this is onsite user get view "def onsite_user(request):
+site_name = request.GET.get('site_name')
+queryset = OnSiteUser.objects.all()
+
+if site_name:
+    try:
+        site = Site.objects.get(name=site_name)
+        queryset = queryset.filter(site=site)
+        print(f"Site found: {site.name}")  # Debugging print statement
+    except Site.DoesNotExist:
+        queryset = OnSiteUser.objects.none()
+        print(f"Site not found: {site_name}")  # Debugging print statement
+
+paginator = Paginator(queryset, 10)  # 10 items per page
+page_number = request.GET.get('page')
+on_site_users = paginator.get_page(page_number)
+
+sites = Site.objects.all()  # Get all sites to display in the template
+
+return render(request, 'app1/onsite_user.html', {'on_site_users': on_site_users, 'sites': sites, 'selected_site_name': site_name})
+"
+ this view perform correctly 
+
+ so now modify get view of reports , noticications,company and Documents
+
+ this is get Analytics and repost view "def report_view(request):
+ try:
+     active_users = UserEnrolled.objects.filter(status='active').count()
+     inactive_users = UserEnrolled.objects.filter(status='inactive').count()
+
+     labels = ['Active', 'Inactive']
+     sizes = [active_users, inactive_users]
+     colors = ['#4CAF50', '#F44336'] 
+
+     plt.figure(figsize=(6, 6))
+     plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
+     #plt.title('User Status')
+     plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+     chart_filename = 'pie_chart.png'
+     chart_path = os.path.join(settings.MEDIA_ROOT, chart_filename)
+     plt.savefig(chart_path)
+
+     chart_url = os.path.join(settings.MEDIA_URL, chart_filename)
+     return render(request, 'app1/report.html', {'chart_url': chart_url})
+ except Exception as e:
+     print(f"An error occurred: {e}")
+     return render(request, 'app1/error.html', {'error_message': str(e)})"
+
+     this is get notification view "
+     def notification_view(request):
+         noti_data =  Notification.objects.all() 
+         return render(request, 'app1/notification1.html', {'noti_data': noti_data})"
+
+    this is company get view "def company_view(request):
+    compy = company.objects.all() 
+    return render(request, 'app1/company.html', {'compy': compy})"
+
+    and this is document get view "def orientation_task(request):
+    if request.method == 'POST':
+        form = OrientationForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return render(request, 'app1/success1.html')
+        else:
+            print(form.errors)
+    else:
+        form = OrientationForm()
+
+    latest_orientation = Orientation.objects.last()
+    return render(request, 'app1/orientation.html', {'form': form, 'latest_orientation': latest_orientation})" 
+
+    so modify this all view for show correct site data
+
 
 **********************************
 
-i want to give same site name that exist in site model 
-here this api takes site value like site : 2 
+this api work correctly only problem is that this api must want 1 field from orientation,facial_data,my_comply
+ i don't want like this i want api that update any single field or update multiple field
+like i don't want to update orientation,facial_data,my_comply then i not pass this but now if i am not pass 1 field from
+orientation,facial_data,my_comply then it return 500 error check api and modify 
 this is model "class UserEnrolled(models.Model):
 sr = models.AutoField(primary_key=True, unique=True)
 picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
@@ -116,7 +226,7 @@ def set_password(self, raw_password):
 def check_password(self, raw_password):
     return check_password(raw_password, self.password)"
 
-this is api "class update_user_api(APIView):
+this is update api "class update_user_api(APIView):
 
 def put(self, request, *args, **kwargs):
     return self.update_user(request)
@@ -133,6 +243,15 @@ def update_user(self, request, partial=False):
         user_enrolled = UserEnrolled.objects.get(email=email)
     except UserEnrolled.DoesNotExist:
         return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Handle site name
+    site_name = request.data.get('site')
+    if site_name:
+        try:
+            site = Site.objects.get(name=site_name.upper())
+            request.data['site'] = site.id
+        except Site.DoesNotExist:
+            return Response({"detail": "Site with the given name does not exist."}, status=status.HTTP_400_BAD_REQUEST)
 
     # Use the serializer to validate and update data
     serializer = UpdateEnrolledSerializer(user_enrolled, data=request.data, partial=partial)
@@ -178,21 +297,70 @@ def add_full_image_urls(self, data, instance):
         data['facial_data'] = request.build_absolute_uri(instance.facial_data.url)
     if 'my_comply' in data:
         data['my_comply'] = request.build_absolute_uri(instance.my_comply.url)
+
+    # Add site name to the response
+    if instance.site:
+        data['site'] = instance.site.name
+
     return data
-" 
+"
 this is serializer "class UpdateEnrolledSerializer(serializers.ModelSerializer):
 class Meta:
     model = UserEnrolled
-    exclude = ['password']" 
+    exclude = ['password']"
 
-userenrolled model having relation with site model this is site model "class Site(models.Model):
-picture = models.ImageField(upload_to='site_pictures/', blank=True, null=True)
-name = models.CharField(max_length=100,unique=True)
-location = models.CharField(max_length=100)
 
-def save(self, *args, **kwargs):
-    self.name = self.name.upper()
-    super(Site, self).save(*args, **kwargs)
-    
-def __str__(self):
-    return self.name"
+
+
+*************************
+
+
+modify this api i want in response only updated field 
+"class UserEnrolledUpdateAPIView_n(generics.UpdateAPIView):
+queryset = UserEnrolled.objects.all()
+serializer_class = UserEnrolledSerializer_update
+
+def get_object(self):
+    email = self.request.data.get('email')
+    if email is None:
+        raise serializers.ValidationError("Email parameter is required for update.")
+    return get_object_or_404(UserEnrolled, email=email)
+
+def update(self, request, *args, **kwargs):
+    # Get the instance that needs to be updated
+    instance = self.get_object()
+
+    # Ensure that the password field is not updated
+    data = request.data.copy()
+    if 'password' in data:
+        data.pop('password')
+
+    # Validate and retrieve the site if provided
+    site_name = data.get('site', None)
+    if site_name:
+        try:
+            site = Site.objects.get(name=site_name)
+            data['site'] = site
+        except Site.DoesNotExist:
+            return Response({"error": "The specified site does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Create the serializer with the updated data
+    serializer = self.get_serializer(instance, data=data, partial=True)
+    serializer.is_valid(raise_exception=True)
+
+    # Save the instance
+    self.perform_update(serializer)
+
+    # Return the entire updated instance
+    instance = self.get_object()  # Refresh the instance to get all fields
+    serializer = self.get_serializer(instance)
+    return Response(serializer.data)
+
+def perform_update(self, serializer):
+    serializer.save(password=self.get_object().password)  # Keep the original password" 
+    this is serializer "    
+    class UserEnrolledSerializer_update(serializers.ModelSerializer):
+        class Meta:
+            model = UserEnrolled
+            fields = '__all__'  # Or specify the fields you want to include
+            read_only_fields = ('password',)  # Make sure password cannot be updated"

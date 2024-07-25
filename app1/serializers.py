@@ -428,12 +428,16 @@ class UserEnrolledSerializerExpiry(serializers.ModelSerializer):
         except UserEnrolled.DoesNotExist:
             raise serializers.ValidationError('User with this email does not exist.')
         
+'''   
         
-        
+from rest_framework import serializers
+
 class UpdateEnrolledSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserEnrolled
         exclude = ['password']
+
+'''
         
     
 class BulkUpdateByEmailSerializer(serializers.Serializer):
@@ -444,4 +448,18 @@ class BulkUpdateByEmailSerializer(serializers.Serializer):
     ])
     
     
+    
+    
+class UserEnrolledSerializer_update(serializers.ModelSerializer):
+    
+
+    class Meta:
+        model = UserEnrolled
+        fields = '__all__'  # Or specify the fields you want to include
+        read_only_fields = ('password',)
+
+    def get_site_name(self, obj):
+        return obj.site.name if obj.site else None
+    
+
 

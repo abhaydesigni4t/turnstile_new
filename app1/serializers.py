@@ -144,15 +144,48 @@ class OrientationSerializer(serializers.ModelSerializer):
     
 
 
+from rest_framework import serializers
+from .models import PreShift, Site
+
 class PreShiftSerializer(serializers.ModelSerializer):
+    site = serializers.CharField()
+
     class Meta:
         model = PreShift
-        fields = ['document', 'date']
+        fields = ['document', 'date', 'site']
+
+    def validate_site(self, value):
+        try:
+            return Site.objects.get(name__iexact=value)
+        except Site.DoesNotExist:
+            raise serializers.ValidationError("Site with this name does not exist.")
+
+    def create(self, validated_data):
+        site_name = validated_data.pop('site')
+        site = Site.objects.get(name__iexact=site_name)
+        return PreShift.objects.create(site=site, **validated_data)
+
+from rest_framework import serializers
+from .models import ToolBox, Site
 
 class ToolBoxSerializer(serializers.ModelSerializer):
+    site = serializers.CharField()
+
     class Meta:
         model = ToolBox
-        fields = ['document', 'date']
+        fields = ['document', 'date', 'site']
+
+    def validate_site(self, value):
+        try:
+            return Site.objects.get(name__iexact=value)
+        except Site.DoesNotExist:
+            raise serializers.ValidationError("Site with this name does not exist.")
+
+    def create(self, validated_data):
+        site_name = validated_data.pop('site')
+        site = Site.objects.get(name__iexact=site_name)
+        return ToolBox.objects.create(site=site, **validated_data)
+
 
 
 from rest_framework import serializers

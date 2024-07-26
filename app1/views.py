@@ -99,17 +99,20 @@ def upload_file(request):
     return render(request, 'app1/upload.html', {'form': form})
 
 def report_view(request):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+
     try:
         active_users = UserEnrolled.objects.filter(status='active').count()
         inactive_users = UserEnrolled.objects.filter(status='inactive').count()
 
         labels = ['Active', 'Inactive']
         sizes = [active_users, inactive_users]
-        colors = ['#4CAF50', '#F44336'] 
+        colors = ['#4CAF50', '#F44336']
 
         plt.figure(figsize=(6, 6))
         plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
-        #plt.title('User Status')
         plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 
         chart_filename = 'pie_chart.png'
@@ -117,10 +120,11 @@ def report_view(request):
         plt.savefig(chart_path)
 
         chart_url = os.path.join(settings.MEDIA_URL, chart_filename)
-        return render(request, 'app1/report.html', {'chart_url': chart_url})
+        return render(request, 'app1/report.html', {'chart_url': chart_url, 'site_name': site_name})
     except Exception as e:
-        print(f"An error occurred: {e}")
-        return render(request, 'app1/error.html', {'error_message': str(e)})
+        return render(request, 'app1/error.html', {'error_message': str(e), 'site_name': site_name})
+
+
 
 class get_data(ListView):
     model = UserEnrolled
@@ -131,8 +135,8 @@ class get_data(ListView):
     def get_queryset(self):
         queryset = UserEnrolled.objects.all()
 
-        # Get site name from URL parameters
-        site_name = self.request.GET.get('site_name')
+        # Get site name from URL parameters or session
+        site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
 
         # Filter by site name if provided
         if site_name:
@@ -160,6 +164,11 @@ class get_data(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
+        if site_name:
+            self.request.session['site_name'] = site_name  # Save site_name to session
+        context['site_name'] = site_name
+
         page = self.request.GET.get('page')
         paginator = Paginator(self.get_queryset(), self.paginate_by)
         page_obj = paginator.get_page(page)
@@ -168,6 +177,7 @@ class get_data(ListView):
         context['page_obj'] = page_obj
         context['paginator'] = paginator
         return context
+
     
 class create_data(CreateView):
     model = UserEnrolled 
@@ -267,13 +277,15 @@ def delete_asset(request, asset_id):
 def asset_site(request):
     site_name = request.GET.get('site_name')
     if site_name:
+        request.session['site_name'] = site_name
         try:
             site = Site.objects.get(name=site_name)
             assets = Asset.objects.filter(site=site)
         except Site.DoesNotExist:
             assets = Asset.objects.none()
     else:
-        assets = Asset.objects.all()
+        site_name = request.session.get('site_name')
+        assets = Asset.objects.filter(site__name=site_name) if site_name else Asset.objects.all()
 
     paginator = Paginator(assets, 8)
     page_number = request.GET.get('page')
@@ -282,6 +294,9 @@ def asset_site(request):
     sites = Site.objects.all()
 
     return render(request, 'app1/asset_site.html', {'assets': assets, 'sites': sites, 'selected_site_name': site_name})
+
+
+
 
 def asset_details(request, asset_id):
     asset = get_object_or_404(Asset, asset_id=asset_id)
@@ -500,8 +515,13 @@ class SiteDeleteView(DeleteView):
     success_url = reverse_lazy('sites')
 
 def company_view(request):
-    compy = company.objects.all() 
-    return render(request, 'app1/company.html', {'compy': compy})
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+
+    compy = company.objects.all()
+    return render(request, 'app1/company.html', {'compy': compy, 'site_name': site_name})
+
 
 def add_company_data(request):
     if request.method == 'POST':
@@ -637,22 +657,35 @@ def delete_selected2(request):
     return redirect('get_all')
 
 def notification_view(request):
-    noti_data =  Notification.objects.all() 
-    return render(request, 'app1/notification1.html', {'noti_data': noti_data})
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+
+    noti_data = Notification.objects.all()
+
+    return render(request, 'app1/notification1.html', {'noti_data': noti_data, 'site_name': site_name})
+
+
+
+
 
 def orientation_task(request):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+
     if request.method == 'POST':
         form = OrientationForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return render(request, 'app1/success1.html')
+            return render(request, 'app1/success1.html', {'site_name': site_name})
         else:
             print(form.errors)
     else:
         form = OrientationForm()
 
     latest_orientation = Orientation.objects.last()
-    return render(request, 'app1/orientation.html', {'form': form, 'latest_orientation': latest_orientation})
+    return render(request, 'app1/orientation.html', {'form': form, 'latest_orientation': latest_orientation, 'site_name': site_name})
 
 def view_attachment(request, attachment_id):
     # Retrieve the attachment by ID (or any other identifier you use)
@@ -814,7 +847,10 @@ def site_document(request):
     return render(request,'app1/site_documents.html')
 
 def preshift(request):
-    site_name = request.GET.get('site_name')
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+
     queryset = PreShift.objects.all()
 
     if site_name:
@@ -831,6 +867,7 @@ def preshift(request):
     preshifts = paginator.get_page(page_number)
 
     return render(request, 'app1/preshift.html', {'preshifts': preshifts, 'site_name': site_name})
+
 
 
 def add_preshift(request):
@@ -866,7 +903,10 @@ def delete_preshift(request, pk):
     return render(request, 'app1/data_confirm_delete7.html', {'preshift': preshift})
 
 def toolbox(request):
-    site_name = request.GET.get('site_name')
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+
     queryset = ToolBox.objects.all()
 
     if site_name:
@@ -883,6 +923,7 @@ def toolbox(request):
     toolbox_talks = paginator.get_page(page_number)
 
     return render(request, 'app1/toolbox.html', {'toolbox_talks': toolbox_talks, 'site_name': site_name})
+
 
 
 def add_toolbox(request):
@@ -1161,7 +1202,10 @@ def upload_facial_data_image(request, user_id):
 from .models import OnSiteUser
 
 def onsite_user(request):
-    site_name = request.GET.get('site_name')
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+
     queryset = OnSiteUser.objects.all()
 
     if site_name:
@@ -1180,6 +1224,7 @@ def onsite_user(request):
     sites = Site.objects.all()  # Get all sites to display in the template
 
     return render(request, 'app1/onsite_user.html', {'on_site_users': on_site_users, 'sites': sites, 'selected_site_name': site_name})
+
 
 def delete_selected5(request):
     if request.method == 'POST':

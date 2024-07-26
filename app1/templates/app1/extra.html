@@ -364,3 +364,131 @@ def perform_update(self, serializer):
             model = UserEnrolled
             fields = '__all__'  # Or specify the fields you want to include
             read_only_fields = ('password',)  # Make sure password cannot be updated"
+
+
+*****************************
+
+
+
+def asset_site(request):
+    site_name = request.GET.get('site_name')
+    if site_name:
+        try:
+            site = Site.objects.get(name=site_name)
+            assets = Asset.objects.filter(site=site)
+        except Site.DoesNotExist:
+            assets = Asset.objects.none()
+    else:
+        assets = Asset.objects.all()
+
+    paginator = Paginator(assets, 8)
+    page_number = request.GET.get('page')
+    assets = paginator.get_page(page_number)
+
+    sites = Site.objects.all()
+
+    return render(request, 'app1/asset_site.html', {'assets': assets, 'sites': sites, 'selected_site_name': site_name})
+
+
+
+    def notification_view(request):
+    site_name = request.GET.get('site_name')
+    noti_data = Notification.objects.all()
+
+    if site_name:
+        try:
+            site = Site.objects.get(name=site_name)
+            noti_data = noti_data.filter(site=site)
+        except Site.DoesNotExist:
+            noti_data = Notification.objects.none()
+
+    return render(request, 'app1/notification1.html', {'noti_data': noti_data, 'site_name': site_name})
+
+************************************
+
+
+
+
+Sure, let me explain how these modifications ensure that the site_name parameter is correctly 
+handled across different views and templates:
+
+Handling site_name in Views
+Retrieving site_name Parameter:
+
+In each view, we attempt to retrieve the site_name parameter from the URL query parameters 
+using self.request.GET.get('site_name').
+If site_name is not found in the URL, we then check the session 
+using self.request.session.get('site_name').
+Saving site_name in Session:
+
+Once we have the site_name, we save it in the session using
+ self.request.session['site_name'] = site_name. This allows us to retain the site_name across different 
+ views even if it's not explicitly provided in the URL.
+Using site_name for Filtering:
+
+For views that need to filter data based on site_name, such as get_data, 
+we use queryset = queryset.filter(site__name=site_name) to filter the queryset if site_name is present.
+Passing site_name to Templates:
+
+We pass the site_name to the template context using context['site_name'] = site_name. 
+This ensures that the site_name is available in the templates for generating links.
+Ensuring Links Pass site_name
+Template Links:
+In your templates, when generating links, we append the site_name parameter to the URL query string. 
+For example:
+html
+Copy code
+<a href="{% url 'asset_site' %}?site_name={{ site_name }}"><i class="fas fa-tasks"></i> Asset Management</a>
+<a href="{% url 'site_docu' %}?site_name={{ site_name }}"><i class="fas fa-file-alt"></i> Site Documents</a>
+<a href="{% url 'onsite_user' %}?site_name={{ site_name }}"><i class="fas fa-user-check"></i> On Site User</a>
+<a href="{% url 'report' %}?site_name={{ site_name }}"><i class="fas fa-chart-bar"></i> Analytics & Reports</a>
+<a href="{% url 'notification1' %}?site_name={{ site_name }}"><i class="fas fa-bell"></i> Notifications</a>
+<a href="{% url 'company' %}?site_name={{ site_name }}"><i class="fas fa-building"></i> Company</a>
+<a href="{% url 'orientation' %}?site_name={{ site_name }}"><i class="fas fa-file-alt"></i> Documents</a>
+Example: get_data View
+Here’s a detailed breakdown of the get_data view:
+
+Class-based View:
+
+The get_data view is a Django class-based view inheriting from ListView.
+Queryset Filtering:
+
+In the get_queryset method, we retrieve the site_name from the URL or session. If site_name is found,
+ we filter the queryset based on site__name.
+Passing Data to Template:
+
+In the get_context_data method, we add the site_name to the context and ensure it's stored in the session
+ if present.
+Example: create_data View
+The create_data view is similarly modified:
+
+Class-based View:
+
+The create_data view is a Django class-based view inheriting from CreateView.
+Handling site_name:
+
+In the get_context_data method, we retrieve the site_name from the URL or session and
+ store it in the session if present. We also add the site_name to the context to make it 
+ available in the template.
+Ensuring site_name in Templates
+By appending ?site_name={{ site_name }} to the URLs in the template, we ensure that the site_name 
+is included in the query string of the generated links. This way, when users navigate from one view to another, 
+the site_name is retained and passed along, allowing the views to correctly filter data based 
+on the current site.
+
+Summary
+These modifications ensure that:
+
+The site_name parameter is correctly retrieved from the URL or session.
+The site_name is stored in the session to persist across different views.
+The site_name is used to filter querysets where necessary.
+The site_name is passed to templates and included in generated links, maintaining context
+ as users navigate the site.
+This approach ensures that the correct site data is displayed and retained as users interact
+ with different parts of your application.
+
+
+
+
+
+

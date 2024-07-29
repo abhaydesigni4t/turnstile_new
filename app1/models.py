@@ -195,6 +195,7 @@ class timeschedule(models.Model):
     group = models.CharField(max_length=100)
     active_time = models.CharField(max_length=50)
     inactive_time = models.CharField(max_length=50)
+    site = models.ForeignKey('Site', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.group
@@ -208,6 +209,7 @@ class Turnstile_S(models.Model):
     turnstile_id = models.IntegerField(unique=True)
     location = models.CharField(max_length=100)
     safety_confirmation = models.BooleanField(default=False)
+    site = models.ForeignKey('Site', on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.turnstile_id)

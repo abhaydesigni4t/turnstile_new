@@ -362,8 +362,9 @@
             <div class="dropdown">
                 <a href="#" class="dropbtn"><i class="fas fa-cog"></i> Settings</a>
                 <div class="dropdown-content">
-                    <a href="{% url 'time' %}"><i class="fas fa-clock"></i> Time Schedule</a>
-                    <a href="{% url 'setting_t' %}"><i class="fas fa-exchange-alt"></i> Turnstile</a>
+                    <a href="{% url 'time' %}?site_name={{ site_name }}"><i class="fas fa-clock"></i> Time Schedule</a>
+                    <a href="{% url 'setting_t' %}?site_name={{ site_name }}"><i class="fas fa-exchange-alt"></i> Turnstile</a>
+                    <a href="{% url 'create_subadmin' %}"><i class="fas fa-user-check"></i> SubAdmin Manage</a>
                 </div>
             </div>
         </nav>

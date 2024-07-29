@@ -344,9 +344,34 @@ def site_view(request):
 def time_shedule(request):
     return render(request,'app1/time_shedule.html')
 
+
+from .models import Turnstile_S, Site  # Assuming the correct model names
+
 def setting_turn(request):
-    turnstiles = Turnstile_S.objects.all()
-    return render(request, 'app1/setting_turn.html', {'turnstiles': turnstiles})
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    
+    if site_name:
+        request.session['site_name'] = site_name
+
+    queryset = Turnstile_S.objects.all()
+
+    if site_name:
+        try:
+            site = Site.objects.get(name=site_name)
+            queryset = queryset.filter(site=site)
+            print(f"Site found: {site.name}")  # Debugging print statement
+        except Site.DoesNotExist:
+            queryset = Turnstile_S.objects.none()
+            print(f"Site not found: {site_name}")  # Debugging print statement
+
+    paginator = Paginator(queryset, 10)  # 10 items per page
+    page_number = request.GET.get('page')
+    turnstiles = paginator.get_page(page_number)
+
+    sites = Site.objects.all()  # Get all sites to display in the template
+
+    return render(request, 'app1/setting_turn.html', {'turnstiles': turnstiles, 'sites': sites, 'selected_site_name': site_name})
+
 
 class ActionStatusAPIView(APIView):
     def get(self, request, *args, **kwargs):
@@ -552,9 +577,34 @@ class CompanyDeleteView(DeleteView):
     template_name = 'app1/data_confirm_delete3.html'
     success_url = reverse_lazy('company')
 
+
+from .models import timeschedule, Site  # Assuming the correct model names
+
 def timesche(request):
-    data = timeschedule.objects.all()
-    return render(request, 'app1/time_shedule.html', {'data': data})
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    
+    if site_name:
+        request.session['site_name'] = site_name
+
+    queryset = timeschedule.objects.all()
+
+    if site_name:
+        try:
+            site = Site.objects.get(name=site_name)
+            queryset = queryset.filter(site=site)
+            print(f"Site found: {site.name}")  # Debugging print statement
+        except Site.DoesNotExist:
+            queryset = timeschedule.objects.none()
+            print(f"Site not found: {site_name}")  # Debugging print statement
+
+    paginator = Paginator(queryset, 10)  # 10 items per page
+    page_number = request.GET.get('page')
+    data = paginator.get_page(page_number)
+
+    sites = Site.objects.all()  # Get all sites to display in the template
+
+    return render(request, 'app1/time_shedule.html', {'data': data, 'sites': sites, 'selected_site_name': site_name})
+
 
 class NotificationList(generics.ListAPIView):
     queryset = Notification.objects.all().order_by('-sr')
@@ -664,9 +714,6 @@ def notification_view(request):
     noti_data = Notification.objects.all()
 
     return render(request, 'app1/notification1.html', {'noti_data': noti_data, 'site_name': site_name})
-
-
-
 
 
 def orientation_task(request):
@@ -974,37 +1021,51 @@ from rest_framework import status
 class UserProfileCreateAPIView(APIView):
     def post(self, request):
         email = request.data.get('email')
-        picture = request.data.get('picture')  # Get the picture data from request
-        
+        picture = request.data.get('picture')
+        site_name = request.data.get('site', '')  # Get the site name if provided
+
         if not email:
             return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         existing_user = UserEnrolled.objects.filter(email=email).first()
         if not existing_user:
             return Response({'error': 'User not found. Please sign up.'}, status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = UserProfileSerializer(existing_user, data=request.data)
+
+        # Handle site lookup
+        site = None
+        if site_name:
+            site = Site.objects.filter(name=site_name).first()
+            if not site:
+                return Response({'error': f'Site with name "{site_name}" not found.'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            # Set to first existing site if no site name is provided
+            site = Site.objects.first()
+
+        serializer = UserProfileSerializer(existing_user, data=request.data, partial=True)
         if serializer.is_valid():
             if picture:
                 # Save picture to user's folder
                 user_folder = os.path.join('media', 'facial_data', existing_user.get_folder_name())
                 os.makedirs(user_folder, exist_ok=True)
-                
+
                 picture_name = picture.name
                 picture_path = os.path.join(user_folder, picture_name)
-                
+
                 with open(picture_path, 'wb') as f:
                     for chunk in picture.chunks():
                         f.write(chunk)
-                
+
                 serializer.validated_data['picture'] = os.path.relpath(picture_path, 'media')
-            
+
+            if site:
+                serializer.validated_data['site'] = site
+
             serializer.save()
-            
+
             return Response(serializer.data, status=status.HTTP_200_OK)  # Status 200 for successful update
-        
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+    
 def show_facial_data_images(request, user_id):
     user = get_object_or_404(UserEnrolled, pk=user_id)
     user_folder = os.path.join('media', 'facial_data', user.get_folder_name())
@@ -1928,8 +1989,6 @@ def create_subadmin(request):
     return render(request, 'app1/create_subadmin.html', {'form': form})
 
 
-
-
 @login_required
 def subadmin_success(request):
     return render(request, 'app1/subadmin_success.html')
@@ -2026,3 +2085,5 @@ class UserEnrolledUpdateAPIView_n(generics.UpdateAPIView):
 
     def perform_update(self, serializer):
         serializer.save(password=self.get_object().password)  # Keep the original password
+        
+

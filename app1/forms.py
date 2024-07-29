@@ -34,7 +34,11 @@ class YourModelForm(forms.ModelForm):
             'orientation': 'Orientation:',
             'expiry_date': 'Expiry Date:',  # Label for expiry date
         }
+    
     #job_role = forms.ChoiceField(choices=UserEnrolled.job_role, widget=forms.Select(attrs={'class': 'form-control'}))
+
+
+
 
 class NotificationForm(forms.ModelForm):
     class Meta:
@@ -88,7 +92,7 @@ class timescheduleForm(forms.ModelForm):
 class TurnstileForm(forms.ModelForm):
     class Meta:
         model = Turnstile_S
-        fields = ['turnstile_id','location','safety_confirmation']
+        fields = ['turnstile_id','location','safety_confirmation','site']
 
 class OrientationForm(forms.ModelForm):
     class Meta:

@@ -197,14 +197,15 @@ class FacialImageDataSerializer(serializers.Serializer):
 
 # serializers.py
 from rest_framework import serializers
-from .models import UserEnrolled
+from .models import UserEnrolled, Site
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    
+    site = serializers.CharField(required=False, allow_blank=True)  # Change to CharField for site name
+
     class Meta:
         model = UserEnrolled
-        fields = ['name', 'company_name', 'job_role', 'mycompany_id', 'job_location', 'email']
-       
+        fields = ['name', 'company_name', 'job_role', 'mycompany_id', 'job_location', 'email', 'site']
+    
     def create(self, validated_data):
         validated_data['status'] = 'active'
         return UserEnrolled.objects.create(**validated_data)
@@ -212,6 +213,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data['status'] = validated_data.get('status', 'active')
         return super().update(instance, validated_data)
+
 
 class UserComplySerializer(serializers.ModelSerializer):
     class Meta:
@@ -225,8 +227,31 @@ from .models import OnSiteUser
 class OnSiteUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = OnSiteUser
-        fields = ['name', 'tag_id', 'status']
+        fields = ['name', 'tag_id', 'status']  
+        
+    
+'''    
+        
+# this is correct post onsite user api post data using site only do this changes in serializer 
 
+class OnSiteUserSerializer(serializers.ModelSerializer):
+    site = serializers.CharField()
+
+    class Meta:
+        model = OnSiteUser
+        fields = ['name', 'tag_id', 'status', 'site']
+
+    def validate_site(self, value):
+        try:
+            return Site.objects.get(name__iexact=value)
+        except Site.DoesNotExist:
+            raise serializers.ValidationError("Site with this name does not exist.")
+
+    def create(self, validated_data):
+        site_name = validated_data.pop('site')
+        site = Site.objects.get(name__iexact=site_name)
+        return OnSiteUser.objects.create(site=site, **validated_data)
+        '''
 
 class OnsiteGetSerializer(serializers.ModelSerializer):
     class Meta:
@@ -484,8 +509,6 @@ class BulkUpdateByEmailSerializer(serializers.Serializer):
     
     
 class UserEnrolledSerializer_update(serializers.ModelSerializer):
-    
-
     class Meta:
         model = UserEnrolled
         fields = '__all__'  # Or specify the fields you want to include

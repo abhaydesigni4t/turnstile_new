@@ -130,7 +130,7 @@ class get_data(ListView):
     model = UserEnrolled
     template_name = 'app1/getdata.html'
     context_object_name = 'data'
-    paginate_by = 3
+    paginate_by = 10
 
     def get_queryset(self):
         queryset = UserEnrolled.objects.all()
@@ -176,6 +176,8 @@ class get_data(ListView):
         context['offset'] = offset
         context['page_obj'] = page_obj
         context['paginator'] = paginator
+        
+        context['data'] = list(enumerate(page_obj.object_list, start=offset + 1))
         return context
 
     
@@ -200,7 +202,6 @@ class TaskDeleteView(DeleteView):
     model = UserEnrolled
     template_name = 'app1/data_confirm_delete.html'
     success_url = reverse_lazy('get_all')
-    
     
 
 @csrf_protect

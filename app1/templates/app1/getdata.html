@@ -177,7 +177,7 @@
         
         
             .sidebar {
-                width: 250px;
+                width: 225px;
                 background-color: #fff;
                 position: fixed;
                 top: 0;
@@ -238,7 +238,7 @@
         
 
         .user {
-            text-align: center;
+            margin-left:1px;
             margin-top: 80px;
           
         }
@@ -249,7 +249,7 @@
             background-color: #ffffff;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-top: 30px; 
+            margin-top: 7px; 
             width:130%;
         }
         
@@ -302,7 +302,7 @@
         .user .add {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #007bff;
+            background-color: #071390;
             color: #ffffff;
             text-decoration: none;
             border-radius: 4px;
@@ -317,8 +317,7 @@
             background-color: #0056b3;
         }
 
-        
-        
+
         .inactive-btn {
             padding: 5px 12px;
             border: none;
@@ -386,16 +385,16 @@
             border-radius: 4px;
             margin: 0 5px;
             text-decoration: none;
-            color: #007bff;
+            color: #071390;
         }
         
         .pagination .step-links .current {
-            background-color: #007bff;
+            background-color: #071390;
             color: #ffffff;
         }
         
         .pagination .step-links a:hover {
-            background-color: #0056b3;
+            background-color: #071390;
             color: #ffffff;
         }
 
@@ -538,7 +537,7 @@
         <a href="{% url 'company' %}?site_name={{ site_name }}"><i class="fas fa-building"></i> Company</a>
         <a href="{% url 'orientation' %}?site_name={{ site_name }}"><i class="fas fa-file-alt"></i> Documents</a>
 
-        <br> <br> 
+        <br> <br> <br> <br>
 
         <div class="user-info">
             <div class="user-details">
@@ -648,11 +647,11 @@
                 <th>Action</th>
             </tr>
 
-            {% for i in data %}
+            {% for index,i in data %}
             <tr>
                 <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
                 
-                <td>{{i.sr}}</td>
+                <td>{{index}}</td>
                 <td>
                     {% if i.picture %}
                     <img src="{{ i.picture.url }}" alt="user" style="width: 50px; height: auto;">

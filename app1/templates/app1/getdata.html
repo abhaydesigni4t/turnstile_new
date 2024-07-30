@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha384-l2pS9FXoq07xZ8T3is0sZuqA4xsJqHvAWEbflU24M6p0T/zl5sJ46R/DLxUJhSZ+7" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
     <title>User Management</title>
     {% load static %}
 
@@ -279,7 +281,7 @@
             margin-bottom: 20px;
         }
         
-        #customers th,
+    
         #customers td {
             padding: 8px 10px;
             text-align: center;
@@ -287,6 +289,7 @@
         }
         
         #customers th {
+            padding: 8px 10px;
             background-color:  #e3e7ea;
             font-weight: bold;
         }
@@ -488,6 +491,30 @@
         color:  #071390 !important;
     }
 
+    th {
+        cursor: pointer;
+        position: relative;
+        padding-right: 30px; /* Adjust spacing to make room for the icon */
+    }
+    
+    th::after {
+        content: "";
+        position: absolute;
+        right: 5px; /* Distance from the right edge */
+        top: 50%;
+        transform: translateY(-50%);
+        font-family: FontAwesome, sans-serif; /* Ensure FontAwesome or equivalent is loaded */
+        font-size: 16px; /* Adjust size as needed */
+        color: #333; /* Adjust color to match your theme */
+    }
+    
+    th.asc::after {
+        content: "\f0de"; /* FontAwesome sort up */
+    }
+    
+    th.desc::after {
+        content: "\f0dd"; /* FontAwesome sort down */
+    }
     </style>
 </head>
 
@@ -588,62 +615,21 @@
         <table id="customers">
             <tr>
                 <th><input type="checkbox" onClick="toggleAll(this)"></th>
-                <th>
-                    <div>
-                        <span class="filter-icon" onclick="toggleFilter('sr', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
-                        Sr No
-                    </div>
-                </th>
-                <th>Picture</th>
-                <th>
-                    <div>
-                        <span class="filter-icon" onclick="toggleFilter('name', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
-                        Name
-                    </div>
-                </th>
-                <th>
-                    <div>
-                        <span class="filter-icon" onclick="toggleFilter('company_name', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
-                        Company
-                    </div>
-                </th>
-                <th>
-                    <div>
-                        <span class="filter-icon" onclick="toggleFilter('job_role', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
-                        Job
-                    </div>
-                </th>
-    
-                <th>
-                    <div>
-                        <span class="filter-icon" onclick="toggleFilter('mycompany_id', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
-                        MC ID
-                    </div>
-                </th>
-                <th>
-                    <div>
-                        <span class="filter-icon" onclick="toggleFilter('tag_id', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
-                        Tag ID
-                    </div>
-                </th>
-                <th>
-                    <div>
-                        <span class="filter-icon" onclick="toggleFilter('job_location', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
-                        Location
-                    </div>
-                </th>
-                <th>Email</th>
-                <th>Orientation</th>
-                <th>Facial Data</th>
-                <th>MyComply</th>
-                <th>Expiry Data</th>
-                <th>
-                    <div>
-                        <span class="filter-icon" onclick="toggleFilter('status', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
-                        Status
-                    </div>
-                </th>
-                <th>Action</th>
+                <th class="sortable">Sr No</th>
+            <th>Picture</th>
+            <th class="sortable">Name</th>
+            <th class="sortable">Company</th>
+            <th class="sortable">Job</th>
+            <th class="sortable">MC ID</th>
+            <th class="sortable">Tag ID</th>
+            <th class="sortable">Location</th>
+            <th>Email</th>
+            <th>Orientation</th>
+            <th>Facial Data</th>
+            <th>MyComply</th>
+            <th class="sortable">Expiry Data</th>
+            <th class="sortable">Status</th>
+            <th>Action</th>
             </tr>
 
             {% for index,i in data %}
@@ -767,8 +753,6 @@
             }
         });
         
-
-
 </script>
 
 <script>
@@ -778,6 +762,55 @@
         }
 </script>
      
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        function sortTable(n, ascending) {
+            const table = document.getElementById("customers");
+            let rows, switching, i, x, y, shouldSwitch, dir;
+            dir = ascending ? "asc" : "desc"; 
+            switching = true;
+    
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                
+                for (i = 1; i < (rows.length - 1); i++) {
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    let xValue = x.textContent || x.innerText;
+                    let yValue = y.textContent || y.innerText;
+    
+                    if (dir === "asc" && xValue > yValue) {
+                        shouldSwitch = true;
+                        break;
+                    } else if (dir === "desc" && xValue < yValue) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+    
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                }
+            }
+        }
+    
+        // Add click event listeners for table headers
+        const headers = document.querySelectorAll("#customers th");
+        headers.forEach((header, index) => {
+            header.addEventListener("click", () => {
+                const isAscending = header.classList.contains("asc");
+                sortTable(index, !isAscending);
+                headers.forEach(h => h.classList.remove("asc", "desc"));
+                header.classList.add(isAscending ? "desc" : "asc");
+            });
+        });
+    });
+    </script>
+    
+    
 </body>
 
 </html>

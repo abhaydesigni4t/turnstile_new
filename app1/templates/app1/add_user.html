@@ -384,9 +384,8 @@
         <a href="{% url 'report' %}?site_name={{ site_name }}"><i class="fas fa-chart-bar"></i> Analytics & Reports</a>
         <a href="{% url 'notification1' %}?site_name={{ site_name }}"><i class="fas fa-bell"></i> Notifications</a>
         <a href="{% url 'company' %}?site_name={{ site_name }}"><i class="fas fa-building"></i> Company</a>
-        <a href="{% url 'orientation' %}?site_name={{ site_name }}"><i class="fas fa-file-alt"></i> Documents</a>
 
-        <br> <br> <br> <br>
+        <br> <br> <br> <br> <br> <br> 
 
         <div class="user-info">
             <div class="user-details">
@@ -405,22 +404,34 @@
         
         <form method="post" action="" enctype="multipart/form-data">
             {% csrf_token %}
-            {% for field in form %}
-                {% if field.name == 'orientation' or field.name == 'facial_data' %}
-                    {% if form.instance.field.name %}
-                        <!-- Display link if field exists -->
-                        <label><a href="#" onclick="showData('{{ field.name }}'); return false;">{{ field.label }}</a></label>
-                        <br>
-                        <div id="{{ field.name }}Data" style="display: none;">
-                            <!-- Display orientation data -->
-                            <p>{{ form.instance.field.name }}</p>
+            <div id="form-errors">
+                {% if form.non_field_errors %}
+                    <ul>
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% for field in form %}
+                    {% if field.errors %}
+                        <div class="field-errors">
+                            <strong>{{ field.label }}:</strong>
+                            <ul>
+                                {% for error in field.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
                         </div>
-                    {% else %}
-                        <!-- File upload button for adding data -->
-                        <label>{{ field.label_tag }}</label>
-                        <br>
-                        <input type="file" name="{{ field.name }}" id="{{ field.id_for_label }}" accept="image/*">
                     {% endif %}
+                {% endfor %}
+            </div>
+        
+            {% for field in form %}
+                {% if field.name == 'orientation' or field.name == 'facial_data' or field.name == 'my_comply' %}
+                    <label>{{ field.label_tag }}</label>
+                    <br>
+                    <!-- File input box for user to choose a new file -->
+                    <input type="file" name="{{ field.name }}" id="{{ field.id_for_label }}" accept="image/*,application/pdf,application/msword">
                 {% else %}
                     {{ field.label_tag }} {{ field }}
                     <br>
@@ -428,7 +439,8 @@
             {% endfor %}
             <input type="submit" value="Save">
         </form>
-
+        
+        
     <!-- <a href="{% url 'get_all' %}">Cancel</a> -->
     </div>
     
@@ -448,5 +460,17 @@
         });
     </script>
     
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const formErrors = document.getElementById('form-errors');
+            if (formErrors) {
+              
+                formErrors.style.color = '#721c24';
+             
+            }
+        });
+        </script>
+        
+        
 </body>
 </html>

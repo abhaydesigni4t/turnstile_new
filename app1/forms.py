@@ -35,6 +35,11 @@ class YourModelForm(forms.ModelForm):
             'expiry_date': 'Expiry Date:',  # Label for expiry date
         }
     
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if UserEnrolled.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("This email address is already in use.")
+        return email
     #job_role = forms.ChoiceField(choices=UserEnrolled.job_role, widget=forms.Select(attrs={'class': 'form-control'}))
 
 

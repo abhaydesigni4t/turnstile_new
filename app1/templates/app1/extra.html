@@ -404,90 +404,413 @@ def asset_site(request):
 
     return render(request, 'app1/notification1.html', {'noti_data': noti_data, 'site_name': site_name})
 
-************************************
+
+
+ *******************************
+
+ when add data then check this email already exist in database onr not if exist then show error this email exist
+
+this is model "class UserEnrolled(models.Model):
+sr = models.AutoField(primary_key=True, unique=True)
+picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
+name = models.CharField(max_length=255)
+company_name = models.CharField(max_length=100)
+job_role = models.CharField(max_length=100)
+mycompany_id = models.CharField(max_length=10)
+tag_id = models.CharField(max_length=50)
+job_location = models.CharField(max_length=100)
+orientation = models.FileField(upload_to='attachments/', blank=True, null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
+facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
+my_comply = models.ImageField(upload_to='compliance_images/', blank=True, null=True)
+expiry_date = models.DateField(blank=True, null=True)
+status = models.CharField(max_length=100, choices=[
+    ('active', 'Active'),
+    ('inactive', 'Inactive'),
+], default='active')
+email = models.EmailField()
+password = models.CharField(max_length=50)
+site = models.ForeignKey('Site', on_delete=models.CASCADE, blank=True, null=True)
+
+def _str_(self):
+    return self.name
+
+def get_folder_name(self):
+    return self.name
+
+def set_password(self, raw_password):
+    self.password = make_password(raw_password)
+
+def check_password(self, raw_password):
+    return check_password(raw_password, self.password)" 
+
+this is view "class create_data(CreateView):
+model = UserEnrolled 
+form_class = YourModelForm
+template_name = 'app1/add_user.html'
+success_url = reverse_lazy('get_all')
+
+def get_context_data(self, **kwargs):
+    context = super().get_context_data(**kwargs)
+    context['data'] = UserEnrolled.objects.all()
+    return context
+"
+this is form "class YourModelForm(forms.ModelForm):
+class Meta:
+    model = UserEnrolled
+    fields = ['name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location', 'orientation', 'facial_data', 'my_comply', 'expiry_date', 'status', 'email', 'site']
+    widgets = {
+        'orientation': forms.ClearableFileInput(attrs={'accept': 'application/pdf, application/msword, image/jpeg, image/jpg'}),
+        'expiry_date': forms.TextInput(attrs={'class': 'datepicker'}),  # jQuery UI datepicker
+    }
+    labels = {
+        'orientation': 'Orientation:',
+        'expiry_date': 'Expiry Date:',  # Label for expiry date
+    }"
+
+
+
+    ************************
+
+
+this is view "class get_data(ListView):
+model = UserEnrolled
+template_name = 'app1/getdata.html'
+context_object_name = 'data'
+paginate_by = 3
+
+def get_queryset(self):
+    queryset = UserEnrolled.objects.all()
+
+    # Get site name from URL parameters or session
+    site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
+
+    # Filter by site name if provided
+    if site_name:
+        queryset = queryset.filter(site__name=site_name)
+
+    # Other filters
+    filter_name = self.request.GET.get('filterName')
+    filter_company_name = self.request.GET.get('filterCompanyName')
+    filter_job_role = self.request.GET.get('filterJobRole')
+    filter_job_location = self.request.GET.get('filterJobLocation')
+    filter_status = self.request.GET.get('filterStatus')
+
+    if filter_name:
+        queryset = queryset.filter(name__icontains=filter_name)
+    if filter_company_name:
+        queryset = queryset.filter(company_name__icontains=filter_company_name)
+    if filter_job_role:
+        queryset = queryset.filter(job_role__icontains=filter_job_role)
+    if filter_job_location:
+        queryset = queryset.filter(job_location__icontains=filter_job_location)
+    if filter_status:
+        queryset = queryset.filter(status__iexact=filter_status)
+
+    return queryset
+
+def get_context_data(self, **kwargs):
+    context = super().get_context_data(**kwargs)
+    site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
+    if site_name:
+        self.request.session['site_name'] = site_name  # Save site_name to session
+    context['site_name'] = site_name
+
+    page = self.request.GET.get('page')
+    paginator = Paginator(self.get_queryset(), self.paginate_by)
+    page_obj = paginator.get_page(page)
+    offset = self.paginate_by * (page_obj.number - 1)
+    context['offset'] = offset
+    context['page_obj'] = page_obj
+    context['paginator'] = paginator
+    return context" this is html code "<div id="table-container">
+
+        <div class="filter-container">
+            <form id="filterForm" method="get" action="{% url 'get_all' %}">
+                <label for="filterName">Name:</label>
+                <input type="text" id="filterName" name="filterName" value="{{ request.GET.filterName|default_if_none:'' }}">
+        
+                <label for="filterCompanyName">Company Name:</label>
+                <input type="text" id="filterCompanyName" name="filterCompanyName" value="{{ request.GET.filterCompanyName|default_if_none:'' }}">
+        
+                <label for="filterJobRole">Job Role:</label>
+                <input type="text" id="filterJobRole" name="filterJobRole" value="{{ request.GET.filterJobRole|default_if_none:'' }}">
+        
+                <label for="filterJobLocation">Job Location:</label>
+                <input type="text" id="filterJobLocation" name="filterJobLocation" value="{{ request.GET.filterJobLocation|default_if_none:'' }}">
+        
+                <label for="filterStatus">Status:</label>
+                <select id="filterStatus" name="filterStatus">
+                    <option value="">All</option>
+                    <option value="active" {% if request.GET.filterStatus == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if request.GET.filterStatus == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+        
+                <button type="submit">Apply Filters</button>
+            </form>
+         
+        </div>
+
+        <form method="post" action="{% url 'delete_selected2' %}">
+            {% csrf_token %}
+        <table id="customers">
+            <tr>
+                <th><input type="checkbox" onClick="toggleAll(this)"></th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('sr', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Sr No
+                    </div>
+                </th>
+                <th>Picture</th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('name', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Name
+                    </div>
+                </th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('company_name', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Company
+                    </div>
+                </th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('job_role', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Job
+                    </div>
+                </th>
+    
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('mycompany_id', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        MC ID
+                    </div>
+                </th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('tag_id', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Tag ID
+                    </div>
+                </th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('job_location', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Location
+                    </div>
+                </th>
+                <th>Email</th>
+                <th>Orientation</th>
+                <th>Facial Data</th>
+                <th>MyComply</th>
+                <th>Expiry Data</th>
+                <th>
+                    <div>
+                        <span class="filter-icon" onclick="toggleFilter('status', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                        Status
+                    </div>
+                </th>
+                <th>Action</th>
+            </tr>
+
+            {% for i in data %}
+            <tr>
+                <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
+                
+                <td>{{i.sr}}</td>
+                <td>
+                    {% if i.picture %}
+                    <img src="{{ i.picture.url }}" alt="user" style="width: 50px; height: auto;">
+                    {% else %}
+                    <img src="{% static 'app1/images/site.jpg' %}" alt="user" style="width: 50px; height: auto;">
+                    {% endif %}
+                </td>
+                <td>{{i.name}}</td>
+                <td>{{i.company_name}}</td>
+                <td>{{i.job_role}}</td>
+                <td>{{i.mycompany_id}}</td>
+                <td>{{i.tag_id}}</td>
+                <td>{{i.job_location}}</td>
+                <td>{{i.email}}</td>
+                {% load custom_filters %}
+                <td>
+                    {% if i.orientation %}
+                    {% with file_extension=i.orientation.name|lower %}
+                    <a href="{{ i.orientation.url }}" target="_blank">
+                        <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                                    {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                                    {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                                    {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                                    {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                                    {% else %}far fa-file
+                                {% endif %}"></i>
+                    </a>
+                    {% endwith %}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                {% load custom_filters %}
+                <td>
+                    {% with file_extension=i.facial_data.name|lower %}
+                    <a href="{% url 'show_facial_data_images' i.pk %}" target="_blank">
+                        <i class="far fa-file-image
+                            {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                            {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                            {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                            {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                            {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                            {% else %}far fa-file
+                            {% endif %}
+                        "></i>
+                    </a>
+                    {% endwith %}
+                </td>
+                <td>
+                    {% if i.my_comply %}
+                    {% with file_extension=i.my_comply.name|lower %}
+                    <a href="{{ i.my_comply.url }}" target="_blank">
+                        <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                                    {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                                    {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                                    {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                                    {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                                    {% else %}far fa-file
+                                {% endif %}"></i>
+                    </a>
+                    {% endwith %}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                <td>{{ i.expiry_date }}</td>
+                <td>{{i.status}}</td>
+                <td>
+                    <div class="dropdownb">
+                        <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
+                        <div class="dropdown-contentb">
+                            <a href="{% url 'user_update' i.sr %}" class="edit-btn">Edit</a>
+                            <a href="{% url 'task_delete' i.pk %}" class="delete-btn">Delete</a>
+                        </div>
+                    </div>
+                </td>
+                
+            </tr>
+            {% endfor %}
+        </table>"
+
+
+i want sr no in assending to desending order in html level this same page so in multiple sites only 
+data is different of all sites so i want to start sr no with assending order 
 
 
 
 
-Sure, let me explain how these modifications ensure that the site_name parameter is correctly 
-handled across different views and templates:
 
-Handling site_name in Views
-Retrieving site_name Parameter:
+from django.core.paginator import Paginator
+from django.views.generic import ListView
 
-In each view, we attempt to retrieve the site_name parameter from the URL query parameters 
-using self.request.GET.get('site_name').
-If site_name is not found in the URL, we then check the session 
-using self.request.session.get('site_name').
-Saving site_name in Session:
+class get_data(ListView):
+    model = UserEnrolled
+    template_name = 'app1/getdata.html'
+    context_object_name = 'data'
+    paginate_by = 3
 
-Once we have the site_name, we save it in the session using
- self.request.session['site_name'] = site_name. This allows us to retain the site_name across different 
- views even if it's not explicitly provided in the URL.
-Using site_name for Filtering:
+    def get_queryset(self):
+        queryset = UserEnrolled.objects.all()
 
-For views that need to filter data based on site_name, such as get_data, 
-we use queryset = queryset.filter(site__name=site_name) to filter the queryset if site_name is present.
-Passing site_name to Templates:
+        # Get site name from URL parameters or session
+        site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
 
-We pass the site_name to the template context using context['site_name'] = site_name. 
-This ensures that the site_name is available in the templates for generating links.
-Ensuring Links Pass site_name
-Template Links:
-In your templates, when generating links, we append the site_name parameter to the URL query string. 
-For example:
-html
-Copy code
-<a href="{% url 'asset_site' %}?site_name={{ site_name }}"><i class="fas fa-tasks"></i> Asset Management</a>
-<a href="{% url 'site_docu' %}?site_name={{ site_name }}"><i class="fas fa-file-alt"></i> Site Documents</a>
-<a href="{% url 'onsite_user' %}?site_name={{ site_name }}"><i class="fas fa-user-check"></i> On Site User</a>
-<a href="{% url 'report' %}?site_name={{ site_name }}"><i class="fas fa-chart-bar"></i> Analytics & Reports</a>
-<a href="{% url 'notification1' %}?site_name={{ site_name }}"><i class="fas fa-bell"></i> Notifications</a>
-<a href="{% url 'company' %}?site_name={{ site_name }}"><i class="fas fa-building"></i> Company</a>
-<a href="{% url 'orientation' %}?site_name={{ site_name }}"><i class="fas fa-file-alt"></i> Documents</a>
-Example: get_data View
-Here’s a detailed breakdown of the get_data view:
+        # Filter by site name if provided
+        if site_name:
+            queryset = queryset.filter(site__name=site_name)
 
-Class-based View:
+        # Other filters
+        filter_name = self.request.GET.get('filterName')
+        filter_company_name = self.request.GET.get('filterCompanyName')
+        filter_job_role = self.request.GET.get('filterJobRole')
+        filter_job_location = self.request.GET.get('filterJobLocation')
+        filter_status = self.request.GET.get('filterStatus')
 
-The get_data view is a Django class-based view inheriting from ListView.
-Queryset Filtering:
+        if filter_name:
+            queryset = queryset.filter(name__icontains=filter_name)
+        if filter_company_name:
+            queryset = queryset.filter(company_name__icontains=filter_company_name)
+        if filter_job_role:
+            queryset = queryset.filter(job_role__icontains=filter_job_role)
+        if filter_job_location:
+            queryset = queryset.filter(job_location__icontains=filter_job_location)
+        if filter_status:
+            queryset = queryset.filter(status__iexact=filter_status)
 
-In the get_queryset method, we retrieve the site_name from the URL or session. If site_name is found,
- we filter the queryset based on site__name.
-Passing Data to Template:
+        return queryset
 
-In the get_context_data method, we add the site_name to the context and ensure it's stored in the session
- if present.
-Example: create_data View
-The create_data view is similarly modified:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
+        if site_name:
+            self.request.session['site_name'] = site_name  # Save site_name to session
+        context['site_name'] = site_name
 
-Class-based View:
+        page = self.request.GET.get('page')
+        paginator = Paginator(self.get_queryset(), self.paginate_by)
+        page_obj = paginator.get_page(page)
+        offset = self.paginate_by * (page_obj.number - 1)
+        context['offset'] = offset
+        context['page_obj'] = page_obj
+        context['paginator'] = paginator
 
-The create_data view is a Django class-based view inheriting from CreateView.
-Handling site_name:
+        # Enumerate serial numbers, start from offset + 1
+        context['data'] = list(enumerate(page_obj.object_list, start=offset + 1))
 
-In the get_context_data method, we retrieve the site_name from the URL or session and
- store it in the session if present. We also add the site_name to the context to make it 
- available in the template.
-Ensuring site_name in Templates
-By appending ?site_name={{ site_name }} to the URLs in the template, we ensure that the site_name 
-is included in the query string of the generated links. This way, when users navigate from one view to another, 
-the site_name is retained and passed along, allowing the views to correctly filter data based 
-on the current site.
-
-Summary
-These modifications ensure that:
-
-The site_name parameter is correctly retrieved from the URL or session.
-The site_name is stored in the session to persist across different views.
-The site_name is used to filter querysets where necessary.
-The site_name is passed to templates and included in generated links, maintaining context
- as users navigate the site.
-This approach ensures that the correct site data is displayed and retained as users interact
- with different parts of your application.
+        return context
 
 
+
+
+        <div id="table-container">
+
+            <div class="filter-container">
+                <form id="filterForm" method="get" action="{% url 'get_all' %}">
+                    <!-- Filter form fields -->
+                    <!-- Existing code -->
+                </form>
+            </div>
+        
+            <form method="post" action="{% url 'delete_selected2' %}">
+                {% csrf_token %}
+                <table id="customers">
+                    <tr>
+                        <th><input type="checkbox" onClick="toggleAll(this)"></th>
+                        <th>
+                            <div>
+                                <span class="filter-icon" onclick="toggleFilter('sr', '{{ sort_by }}')"><i class="fas fa-filter"></i></span>
+                                Sr No
+                            </div>
+                        </th>
+                        <th>Picture</th>
+                        <!-- Other headers -->
+                    </tr>
+        
+                    {% for index, i in data %}
+                    <tr>
+                        <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
+                        <td>{{ index }}</td>
+                        <td>
+                            {% if i.picture %}
+                            <img src="{{ i.picture.url }}" alt="user" style="width: 50px; height: auto;">
+                            {% else %}
+                            <img src="{% static 'app1/images/site.jpg' %}" alt="user" style="width: 50px; height: auto;">
+                            {% endif %}
+                        </td>
+                        <!-- Other table data -->
+                    </tr>
+                    {% endfor %}
+                </table>
+            </form>
+        </div>
+        
 
 
 

@@ -535,9 +535,8 @@
         <a href="{% url 'report' %}?site_name={{ site_name }}"><i class="fas fa-chart-bar"></i> Analytics & Reports</a>
         <a href="{% url 'notification1' %}?site_name={{ site_name }}"><i class="fas fa-bell"></i> Notifications</a>
         <a href="{% url 'company' %}?site_name={{ site_name }}"><i class="fas fa-building"></i> Company</a>
-        <a href="{% url 'orientation' %}?site_name={{ site_name }}"><i class="fas fa-file-alt"></i> Documents</a>
 
-        <br> <br> <br> <br>
+        <br> <br> <br> <br> <br> <br> 
 
         <div class="user-info">
             <div class="user-details">
@@ -756,19 +755,6 @@
     </div>
 
     <script>
-
-    
-    function toggleFilter(column, currentSortBy) {
-        let newSortBy = column;
-        let newSortOrder = 'asc';
-
-        if (currentSortBy === column) {
-            newSortOrder = 'desc';
-        }
-
-        window.location.href = '/sort_data/?sort_by=' + newSortBy + '&sort_order=' + newSortOrder;
-    }
-
 
  
         document.addEventListener('DOMContentLoaded', function() {

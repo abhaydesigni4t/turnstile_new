@@ -224,10 +224,35 @@ class UserComplySerializer(serializers.ModelSerializer):
 from rest_framework import serializers
 from .models import OnSiteUser
 
+
 class OnSiteUserSerializer(serializers.ModelSerializer):
+    site = serializers.CharField(required=False)
+
     class Meta:
         model = OnSiteUser
-        fields = ['name', 'tag_id', 'status']  
+        fields = ['name', 'tag_id', 'status', 'site']
+
+    def to_internal_value(self, data):
+        # Convert site name to Site instance
+        internal_data = super().to_internal_value(data)
+        site_name = data.get('site')
+
+        if site_name:
+            try:
+                site = Site.objects.get(name=site_name)
+                internal_data['site'] = site
+            except Site.DoesNotExist:
+                raise serializers.ValidationError({'site': 'Site with the provided name does not exist.'})
+        else:
+            internal_data['site'] = None
+        
+        return internal_data
+
+    def to_representation(self, instance):
+        # Convert Site instance to site name for the response
+        representation = super().to_representation(instance)
+        representation['site'] = instance.site.name if instance.site else None
+        return representation
         
     
 '''    
@@ -254,9 +279,15 @@ class OnSiteUserSerializer(serializers.ModelSerializer):
         '''
 
 class OnsiteGetSerializer(serializers.ModelSerializer):
+    site = serializers.SerializerMethodField()
+
     class Meta:
         model = OnSiteUser
-        fields = ['name', 'tag_id', 'status', 'timestamp']
+        fields = ['name', 'tag_id', 'status', 'timestamp', 'site']
+
+    def get_site(self, obj):
+        # Return the site name instead of the primary key
+        return obj.site.name if obj.site else None
 
 
 class PostSiteSerializer(serializers.ModelSerializer):

@@ -1302,11 +1302,23 @@ from rest_framework import generics
 from .models import OnSiteUser
 from .serializers import OnSiteUserSerializer
 
+
 class OnSiteUserCreateAPIView(APIView):
     def post(self, request):
         serializer = OnSiteUserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            site = serializer.validated_data.get('site')
+
+            # If site is None (not provided), default to the first site
+            if site is None:
+                site = Site.objects.first()
+                if site is None:
+                    return Response({"error": "No sites available."}, status=status.HTTP_400_BAD_REQUEST)
+                # Update the validated_data with the default site
+                serializer.validated_data['site'] = site
+
+            # Save the OnSiteUser instance with the site
+            serializer.save(site=site)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

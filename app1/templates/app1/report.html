@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha384-l2pS9FXoq07xZ8T3is0sZuqA4xsJqHvAWEbflU24M6p0T/zl5sJ46R/DLxUJhSZ+7" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="{% static 'app1/css/style.css' %}">
-    <title>Document</title>
+    <title>Report</title>
     
     <style>
         body {
@@ -199,19 +199,8 @@
     }
 
 
-    .container {
-        text-align: center;
-        margin-top: 50px;
-        margin-left: 335px; /* Adjusted margin-left */
-        max-width: 50%; /* Decreased max-width */
-    }
-    
-    .chart-container {
-        max-width: 400px; 
-        margin: 0 auto;
-    }
-    
-    
+   
+
     @media only screen and (max-width: 768px) {
     .hidden-desktop {
         display: block;
@@ -269,14 +258,14 @@
 
     .container {
         text-align: center;
-        margin-top: 10px; /* Further reduced margin for better spacing on mobile */
+        margin-top: 20px; /* Further reduced margin for better spacing on mobile */
         padding: 0 5px; /* Further reduced padding to avoid content touching the edges */
-        width: 100%; /* Ensure container takes full width on mobile */
+        width: 60%; /* Ensure container takes full width on mobile */
         box-sizing: border-box; /* Include padding and border in the element's total width and height */
     }
 
     .chart-container {
-        max-width: 100%; /* Ensure chart container is responsive */
+        max-width: 80%; /* Ensure chart container is responsive */
         margin: 0 auto;
         overflow-x: auto; /* Allow horizontal scrolling if needed */
     }
@@ -294,7 +283,36 @@
     
 }
 
+.container {
+    text-align: center;
+    margin-top: 75px;
+    margin-left: 430px; /* Adjusted margin-left */
+    max-width: 50%; /* Decreased max-width */
+}
 
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.chart-container {
+    margin: 20px;
+    
+
+}
+.stats {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+}
+.stats div {
+    text-align: center;
+}
+.stats div span {
+    display: block;
+    font-size: 24px;
+    font-weight: bold;
+}
     </style>
 </head>
 
@@ -359,6 +377,24 @@
 
     
     <div class="container">
+        <div class="stats">
+            <div>
+                <span>{{ total_users }}</span>
+                Total Workers
+            </div>
+            <div>
+                <span>{{ active_users }}</span>
+                Active Workers
+            </div>
+            <div>
+                <span>{{ inactive_users }}</span>
+                Inactive Workers
+            </div>
+            <div>
+                <span>{{ pending_users }}</span>
+                Pending Workers
+            </div>
+        </div>
         <div class="chart-container">
             <img src="{{ chart_url }}" alt="User Status Pie Chart">
         </div>
@@ -388,15 +424,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
-

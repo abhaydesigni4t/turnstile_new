@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>header and footer</title>
+    <title>Onsite User</title>
     {% load static %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -437,14 +437,12 @@
 
     <div class="content">
         <div id="table-container">
-            <div class="filter-container">
-                <form method="post" action="{% url 'delete_selected5' %}">
-                    {% csrf_token %}
-                    <input type="text" id="filterName" name="filterName" placeholder="Filter by Name">
-                    <input type="date" id="filterDate" name="filterDate" placeholder="Filter by Date">
-                    <button type="submit" class="filter-btn">Filter</button>
-                </form>
-            </div>
+            <form method="post" action="{% url 'delete_selected5' %}">
+                {% csrf_token %}
+                <div class="filter-container">
+                    <input type="text" id="filterName" placeholder="Filter by Name">
+                    <input type="date" id="filterDate" placeholder="Filter by Date">
+                </div>
                 <table id="customers">
                     <thead>
                         <tr>
@@ -457,7 +455,7 @@
                     </thead>
                     <tbody>
                         {% for i in on_site_users %}
-                        <tr>
+                        <tr data-name="{{ i.name }}" data-timestamp="{{ i.timestamp|date:'Y-m-d H:i:s A' }}">
                             <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
                             <td>{{ i.name }}</td>
                             <td>{{ i.tag_id }}</td>
@@ -469,7 +467,6 @@
                 </table>
                 <button type="submit" class="delete-btn">Delete Selected</button>
             </form>
-    
 
             <div class="pagination">
                 <span class="step-links">
@@ -505,38 +502,57 @@
             nav.classList.toggle('open');
         }
 
-        function filterTable() {
-            var filterName = document.getElementById('filterName').value.toUpperCase();
-            var filterDate = document.getElementById('filterDate').value;
         
-            var table = document.getElementById('users');
-            var rows = table.getElementsByTagName('tr');
-        
-            for (var i = 1; i < rows.length; i++) {
-                var row = rows[i];
-                var cols = row.getElementsByTagName('td');
-        
-                var name = cols[1].textContent || cols[1].innerText;
-                var timestamp = cols[4].textContent || cols[4].innerText;
-                var date = timestamp.split(' ')[0]; // Extract the date part of the timestamp
-        
-                var showRow = true;
-                if (filterName && !name.toUpperCase().includes(filterName)) {
-                    showRow = false;
-                }
-                if (filterDate && date !== filterDate) {
-                    showRow = false;
-                }
-        
-                row.style.display = showRow ? '' : 'none';
-            }
-        }
-        
-        document.getElementById('filterName').addEventListener('input', filterTable);
-        document.getElementById('filterDate').addEventListener('input', filterTable);
-
         
     </script>
+
+    <script>
+        function toggleAll(source) {
+            checkboxes = document.getElementsByName('selected_recordings');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+    </script>
+        
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const nameInput = document.getElementById('filterName');
+                const dateInput = document.getElementById('filterDate');
+                const table = document.getElementById('customers');
+            
+                // Convert date from 'YYYY-MM-DD' to 'YYYY-MM-DD'
+                function formatDate(date) {
+                    return date.toISOString().split('T')[0]; // Format to 'YYYY-MM-DD'
+                }
+            
+                function filterTable() {
+                    const nameFilter = nameInput.value.toLowerCase();
+                    const dateFilter = dateInput.value ? formatDate(new Date(dateInput.value)) : '';
+            
+                    table.querySelectorAll('tbody tr').forEach(row => {
+                        const name = row.getAttribute('data-name').toLowerCase();
+                        const timestamp = row.getAttribute('data-timestamp').split(' ')[0]; // Extract date part only
+            
+                        // Check if row matches the filters
+                        const matchesName = name.includes(nameFilter);
+                        const matchesDate = !dateFilter || timestamp === dateFilter;
+            
+                        if (matchesName && matchesDate) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                }
+            
+                // Add event listeners for input fields
+                nameInput.addEventListener('input', filterTable);
+                dateInput.addEventListener('input', filterTable);
+            });
+            </script>
+            
 </body>
 
 </html>

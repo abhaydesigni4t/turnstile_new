@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha384-l2pS9FXoq07xZ8T3is0sZuqA4xsJqHvAWEbflU24M6p0T/zl5sJ46R/DLxUJhSZ+7" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <title>header and footer</title>
+    <title>Tollbox and Talks</title>
     {% load static %}
     
     <style>
@@ -572,52 +572,49 @@
         </div>
         <div id="table-container">
             <div class="filter-container">
-                <form method="GET" action="{% url 'filter_toolbox' %}">
-                    <label for="selected_date">Filter by Date:</label>
-                    <input type="date" id="selected_date" name="selected_date">
-                    <button type="submit">Filter</button>
-                </form>
+             
+                <input type="date" id="selected_date">
             </div>
-            {% comment %} <div id="google_translate_element"></div> google translate api {% endcomment %}
     
             <table id="customers">
-            <tr>
-                <th>Document</th>
-                <th>Data</th>
-                <th>Action</th>
-            </tr>
-            {% for document in toolbox_talks %}
-            <tr>
-                <td>
-                    {% if document.document %}
-                        {% with file_extension=document.document.name|lower|slice:"-4:" %}
-                            <a href="{{ document.document.url }}" target="_blank">
-                                <i class="file-icon {% if file_extension == '.pdf' %}far fa-file-pdf
-                                                {% elif file_extension == '.doc' or file_extension == '.docx' %}far fa-file-word
-                                                {% elif file_extension == '.xls' or file_extension == '.xlsx' %}far fa-file-excel
-                                                {% elif file_extension == '.ppt' or file_extension == '.pptx' %}far fa-file-powerpoint
-                                                {% else %}far fa-file
-                                            {% endif %}"></i>
-                            </a>
-                        {% endwith %}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>   
-                <td>{{ document.date }}</td>
-                <td>
-                    <div class="dropdownb">
-                        <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
-                        <div class="dropdown-contentb">
-                            <a href="{% url 'edit_toolbox' pk=document.pk %}" class="edit-btn">Edit</a>
-                            <a href="{% url 'delete_toolbox' pk=document.pk %}" class="delete-btn">Delete</a>
+                <tr>
+                    <th>Document</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+                {% for document in toolbox_talks %}
+                <tr data-date="{{ document.date|date:'F j, Y' }}">
+                    <td>
+                        {% if document.document %}
+                            {% with file_extension=document.document.name|lower|slice:"-4:" %}
+                                <a href="{{ document.document.url }}" target="_blank">
+                                    <i class="file-icon {% if file_extension == '.pdf' %}far fa-file-pdf
+                                                    {% elif file_extension == '.doc' or file_extension == '.docx' %}far fa-file-word
+                                                    {% elif file_extension == '.xls' or file_extension == '.xlsx' %}far fa-file-excel
+                                                    {% elif file_extension == '.ppt' or file_extension == '.pptx' %}far fa-file-powerpoint
+                                                    {% else %}far fa-file
+                                                {% endif %}"></i>
+                                </a>
+                            {% endwith %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>   
+                    <td>{{ document.date }}</td>
+                    <td>
+                        <div class="dropdownb">
+                            <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
+                            <div class="dropdown-contentb">
+                                <a href="{% url 'edit_toolbox' pk=document.pk %}" class="edit-btn">Edit</a>
+                                <a href="{% url 'delete_toolbox' pk=document.pk %}" class="delete-btn">Delete</a>
+                            </div>
                         </div>
-                    </div>
-                </td>   
-                
-            </tr>
-            {% endfor %}
-        </table>
+                    </td>   
+                    
+                </tr>
+                {% endfor %}
+            </table>
+   
     
         
         <div class="pagination">
@@ -661,6 +658,44 @@
         }
     </script>
     
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateInput = document.getElementById('selected_date');
+            const table = document.getElementById('customers');
+            
+            // Function to format a Date object as "Month Day, Year"
+            function formatDate(date) {
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                return date.toLocaleDateString('en-US', options);
+            }
+            
+            dateInput.addEventListener('input', () => {
+                const selectedDate = dateInput.value;
+                if (!selectedDate) {
+                    // If no date is selected, show all rows
+                    table.querySelectorAll('tr[data-date]').forEach(row => {
+                        row.style.display = '';
+                    });
+                    return;
+                }
+        
+                // Convert selectedDate from 'yyyy-mm-dd' to 'Month Day, Year'
+                const selectedDateObj = new Date(selectedDate);
+                const formattedSelectedDate = formatDate(selectedDateObj);
+                
+                table.querySelectorAll('tr[data-date]').forEach(row => {
+                    const rowDate = row.getAttribute('data-date');
+                    if (rowDate === formattedSelectedDate) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+        </script>
+        
+        
 </body>
 
 

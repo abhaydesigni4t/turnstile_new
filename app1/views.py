@@ -98,6 +98,11 @@ def upload_file(request):
         form = upload_form()
     return render(request, 'app1/upload.html', {'form': form})
 
+import matplotlib
+matplotlib.use('Agg')  # Use a non-interactive backend
+import matplotlib.pyplot as plt
+
+
 def report_view(request):
     site_name = request.GET.get('site_name') or request.session.get('site_name')
     if site_name:
@@ -106,21 +111,27 @@ def report_view(request):
     try:
         active_users = UserEnrolled.objects.filter(status='active').count()
         inactive_users = UserEnrolled.objects.filter(status='inactive').count()
+        pending_users = UserEnrolled.objects.filter(status='pending').count()
+        total_users = active_users + inactive_users + pending_users
 
-        labels = ['Active', 'Inactive']
-        sizes = [active_users, inactive_users]
-        colors = ['#4CAF50', '#F44336']
+        labels = ['Active', 'Inactive', 'Pending']
+        sizes = [active_users, inactive_users, pending_users]
+        colors = ['#071390', '#5052cc', '#adaef0']
 
         plt.figure(figsize=(6, 6))
-        plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
+        plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140, wedgeprops=dict(width=0.3))
+        plt.text(0, 0, f'{total_users}', ha='center', va='center', fontsize=24)
         plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 
         chart_filename = 'pie_chart.png'
         chart_path = os.path.join(settings.MEDIA_ROOT, chart_filename)
         plt.savefig(chart_path)
+        plt.close()
 
         chart_url = os.path.join(settings.MEDIA_URL, chart_filename)
-        return render(request, 'app1/report.html', {'chart_url': chart_url, 'site_name': site_name})
+        return render(request, 'app1/report.html', {'chart_url': chart_url, 'site_name': site_name, 
+                                                    'active_users': active_users, 'inactive_users': inactive_users,
+                                                    'pending_users': pending_users, 'total_users': total_users})
     except Exception as e:
         return render(request, 'app1/error.html', {'error_message': str(e), 'site_name': site_name})
 
@@ -722,18 +733,26 @@ def orientation_task(request):
     if site_name:
         request.session['site_name'] = site_name
 
+    success_message = None  # Initialize success message variable
+
     if request.method == 'POST':
         form = OrientationForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return render(request, 'app1/success1.html', {'site_name': site_name})
+            success_message = "Document uploaded successfully!"  # Set success message
+            form = OrientationForm()  # Reset form after successful submission
         else:
             print(form.errors)
     else:
         form = OrientationForm()
 
     latest_orientation = Orientation.objects.last()
-    return render(request, 'app1/orientation.html', {'form': form, 'latest_orientation': latest_orientation, 'site_name': site_name})
+    return render(request, 'app1/orientation.html', {
+        'form': form,
+        'latest_orientation': latest_orientation,
+        'site_name': site_name,
+        'success_message': success_message  # Pass success message to template
+    })
 
 def view_attachment(request, attachment_id):
     # Retrieve the attachment by ID (or any other identifier you use)
@@ -1287,15 +1306,16 @@ def onsite_user(request):
 
     return render(request, 'app1/onsite_user.html', {'on_site_users': on_site_users, 'sites': sites, 'selected_site_name': site_name})
 
-
 def delete_selected5(request):
     if request.method == 'POST':
         selected_records = request.POST.getlist('selected_recordings')
-        if 'select_all' in request.POST:
-            selected_records = [str(record.pk) for record in OnSiteUser.objects.all()]
-        OnSiteUser.objects.filter(pk__in=selected_records).delete()
-        return redirect('onsite_user')  
+        if selected_records:
+            OnSiteUser.objects.filter(pk__in=selected_records).delete()
+        else:
+            # Handle the case where no records are selected, maybe add a message or log
+            pass
     return redirect('onsite_user')
+
 
 
 from rest_framework import generics
@@ -1984,6 +2004,8 @@ from .forms import SubAdminCreationForm
 
 @login_required
 def create_subadmin(request):
+    success_message = None  # Initialize success message variable
+
     if request.method == 'POST':
         form = SubAdminCreationForm(request.POST)
         if form.is_valid():
@@ -1994,12 +2016,19 @@ def create_subadmin(request):
             user.save()
             sites = form.cleaned_data['sites']
             user.sites.set(sites)
-            return redirect('subadmin_success')
+            success_message = "Subadmin created successfully!"  # Set success message
+            form = SubAdminCreationForm()  # Reset form after successful submission
         else:
+            # Return form errors with the form
             return render(request, 'app1/create_subadmin.html', {'form': form, 'errors': form.errors})
+
     else:
         form = SubAdminCreationForm()
-    return render(request, 'app1/create_subadmin.html', {'form': form})
+
+    return render(request, 'app1/create_subadmin.html', {
+        'form': form,
+        'success_message': success_message,  # Pass success message to template
+    })
 
 
 @login_required
@@ -2099,4 +2128,6 @@ class UserEnrolledUpdateAPIView_n(generics.UpdateAPIView):
     def perform_update(self, serializer):
         serializer.save(password=self.get_object().password)  # Keep the original password
         
+
+
 

@@ -78,7 +78,8 @@ class UserEnrolled(models.Model):
     status = models.CharField(max_length=100, choices=[
         ('active', 'Active'),
         ('inactive', 'Inactive'),
-    ], default='active')
+        ('pending', 'Pending'),
+    ], default='pending')
     email = models.EmailField()
     password = models.CharField(max_length=50)
     site = models.ForeignKey('Site', on_delete=models.CASCADE, blank=True, null=True)

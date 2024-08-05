@@ -38,7 +38,7 @@
             font-size: 14px;
             text-decoration: none;
             display: inline-block;
-            margin-right: 2px;
+            margin-right: 5px;
             transition: color 0.3s ease;
         }
     
@@ -122,7 +122,7 @@
             margin-bottom: -5px;
             /* Adjust as needed */
             margin-right: 80px;
-            margin-left: -10px
+            margin-left: 10px
         }
     
         .sidebar-logo img {
@@ -318,10 +318,10 @@
         <a class="logo" href="#"><img src="{% static 'app1/images/logo.jpg' %}" alt="Logo"></a>
 
         <nav class="nav">
-            <a href="{% url 'get_all' %}"><i class="fas fa-users"></i>User Management</a>
-            <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-tasks"></i> Asset Management</a>
-            <a href="{% url 'site_docu' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-file-alt"></i> Site Documents</a>
-            <a href="{% url 'onsite_user' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-user-check"></i> On Site User</a>
+            <a href="{% url 'get_all' %}"><i class="fas fa-user-friends"></i>User Management</a>
+            <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-database"></i> Asset Management</a>
+            <a href="{% url 'site_docu' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-folder-open"></i> Site Documents</a>
+            <a href="{% url 'onsite_user' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-user-circle"></i> On Site User</a>
             <div class="dropdown">
                 <a href="#" class="dropbtn"><i class="fas fa-language"></i> Language</a>
                 <div class="dropdown-content">
@@ -331,11 +331,11 @@
             </div>
             
             <div class="dropdown">
-                <a href="#" class="dropbtn"><i class="fas fa-cog"></i> Settings</a>
+                <a href="#" class="dropbtn"><i class="fas fa-sliders-h"></i> Settings</a>
                 <div class="dropdown-content">
-                    <a href="{% url 'time' %}?site_name={{ site_name }}"><i class="fas fa-clock"></i> Time Schedule</a>
+                    <a href="{% url 'time' %}?site_name={{ site_name }}"><i class="far fa-clock"></i> Time Schedule</a>
                     <a href="{% url 'setting_t' %}?site_name={{ site_name }}"><i class="fas fa-exchange-alt"></i> Turnstile</a>
-                    <a href="{% url 'create_subadmin' %}"><i class="fas fa-user-check"></i> SubAdmin Manage</a>
+                    <a href="{% url 'create_subadmin' %}"><i class="fas fa-user-shield"></i>Manage SubAdmins</a>
                 </div>
             </div>
         </nav>
@@ -353,7 +353,7 @@
         </div>
         
         <a href="{% url 'sites' %}"><i class="fas fa-globe"></i> Site Management</a>
-        <a href="{% url 'report' %}?site_name={{ site_name }}"><i class="fas fa-chart-bar"></i> Analytics & Reports</a>
+        <a href="{% url 'report' %}?site_name={{ site_name }}"><i class="fas fa-chart-line"></i> Analytics & Reports</a>
         <a href="{% url 'notification1' %}?site_name={{ site_name }}"><i class="fas fa-bell"></i> Notifications</a>
         <a href="{% url 'company' %}?site_name={{ site_name }}"><i class="fas fa-building"></i> Company</a>
 

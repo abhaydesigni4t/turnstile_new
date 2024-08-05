@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="styles.css">
 <style>
     body {
-        font-family: 'Times New Roman', Times, serif;
+        font-family: 'Verdana', sans-serif;
         position: relative;
         display: flex;
         justify-content: center;
@@ -34,11 +34,11 @@
 
     .logo-container {
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
 
     .logo-container img {
-        max-width: 150px;
+        max-width: 200px;
         height: auto; 
         filter: brightness(100%); /* Adjust brightness as needed */
     }
@@ -54,7 +54,7 @@
         overflow: auto; /* Enable scrolling */
         padding: 20px; /* Add some padding */
         box-sizing: border-box; /* Include padding in the element's total width and height */
-        margin-top:80px;
+        margin-top:10px;
     }
 
     .auth-card {
@@ -62,7 +62,8 @@
         padding: 30px;
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        width: 400px;
+        width: 350px;
+    
     }
 
     .auth-tabs {
@@ -77,10 +78,7 @@
         border-bottom: 2px solid transparent;
     }
 
-    .auth-tabs div.active {
-        border-bottom: 2px solid #071390;
-        color: #071390;
-    }
+    
 
     .auth-form {
         display: none;
@@ -180,8 +178,8 @@
     <div class="auth-card">
        
         <div class="auth-tabs">
-            <div id="signin-tab" class="active">Sign in</div>
-            <div id="signup-tab">Sign up</div>
+            <div id="signin-tab" class="active"style="font-size: 20px;">Sign in</div>
+            {% comment %} <div id="signup-tab">Sign up</div> {% endcomment %}
         </div>
         
         <!-- Login Form -->
@@ -191,7 +189,7 @@
             <input type="email" id="signin-email" name="email" placeholder="Email" required>
             <label for="signin-password">Password</label>
             <input type="password" id="signin-password" name="password" placeholder="Password" required>
-            <button type="submit">Sign in</button>
+            <button type="submit">Get Started</button>
             {% if form.errors %}
                 <div class="error-message">
                     {% for field, error in form.errors.items %}
@@ -201,7 +199,7 @@
             {% endif %}
         </form>
         
-        <!-- Signup Form -->
+        <!-- Signup Form 
         <form id="signup-form" action="{% url 'signup' %}" method="post" class="auth-form">
             {% csrf_token %}
             <label for="signup-name">Name</label>
@@ -238,7 +236,7 @@
                 </div>
             {% endif %}
         </form>
-        
+        -->
     </div>
 </div>
 <div id="popup-message" class="popup-message"></div>

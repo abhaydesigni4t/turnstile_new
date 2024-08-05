@@ -33,6 +33,7 @@ class YourModelForm(forms.ModelForm):
         labels = {
             'orientation': 'Orientation:',
             'expiry_date': 'Expiry Date:',  # Label for expiry date
+            'my_comply' : 'SST'
         }
     
     def clean_email(self):

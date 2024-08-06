@@ -71,7 +71,20 @@ class AssetForm(forms.ModelForm):
 
     class Meta:
         model = Asset
-        fields = [ 'asset_id','picture','asset_name', 'tag_id', 'footage' , 'description', 'asset_category','status','location','site']
+        fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'footage', 'description', 'asset_category', 'status', 'location', 'site']
+        widgets = {
+            'picture': forms.FileInput(attrs={'class': 'custom-file-input'}),
+            'footage': forms.FileInput(attrs={'class': 'custom-file-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Remove the 'Currently' and 'Clear' parts from the image fields
+        for field_name in ['picture', 'footage']:
+            field = self.fields.get(field_name)
+            if field:
+                field.widget.attrs.pop('initial', None)
+                field.widget.attrs.pop('clear_checkbox_label', None)
       
 class SiteForm(forms.ModelForm):
     class Meta:

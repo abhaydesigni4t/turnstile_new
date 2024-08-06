@@ -465,9 +465,9 @@
                 <tr>
                     <td>
                         {% if site.picture %}
-                        <img src="{{ site.picture.url }}" alt="Site" style="width: 50px; height: auto;">
+                        <img src="{{ site.picture.url }}" alt="Site" style="width: 50px; height: 50px; object-fit: cover;">
                         {% else %}
-                        <img src="{% static 'app1/images/site.jpg' %}" alt="Site" style="width: 50px; height: auto;">
+                        <img src="{% static 'app1/images/site.jpg' %}" alt="Site" style="width: 50px; height: 50px; object-fit: cover;">
                         {% endif %}
                     </td>
                     <td><a href="{% url 'get_all' %}?site_name={{ site.name }}">{{ site.name }}</a></td>

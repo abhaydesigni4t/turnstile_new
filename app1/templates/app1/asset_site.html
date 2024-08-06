@@ -583,7 +583,7 @@
                 <th>Picture</th>
                 <th>Asset Name</th>
                 <th>Tag ID</th>
-                <th>Footage</th>
+
                 <th>Asset Status</th>
                 <th>Action</th>
             </tr>
@@ -592,31 +592,13 @@
                 <td>{{ asset.asset_id }}</td>
                 <td>
                     {% if asset.picture %}
-                    <img src="{{ asset.picture.url }}" alt="Asset" style="width: 50px; height: auto;">
+                    <img src="{{ asset.picture.url }}" alt="Asset" style="width: 50px; height: 50px; object-fit: cover;">
                     {% else %}
-                    <img src="{% static 'app1/images/asset.jpg' %}" alt="Asset" style="width: 50px; height: auto;">
+                    <img src="{% static 'app1/images/asset.jpg' %}" alt="Asset" style="width: 50px; height: 50px; object-fit: cover;">
                     {% endif %}
                 </td>
                 <td><a class="link" href="{% url 'update_asset' asset_id=asset.asset_id %}">{{ asset.asset_name }}</a></td>
                 <td>{{ asset.tag_id }}</td>
-                <td>
-                    {% if asset.footage %}
-                        {% with file_extension=asset.footage.name|lower %}
-                            <a href="{{ asset.footage.url }}" target="_blank">
-                                <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
-                                                    {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
-                                                    {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
-                                                    {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
-                                                    {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
-                                                    {% else %}far fa-file
-                                                {% endif %}" style="color: black;"></i>
-                            </a>
-                        {% endwith %}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
-                
                 
                 <td>{{ asset.status }}</td>
                 <td>

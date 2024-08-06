@@ -308,8 +308,6 @@ def asset_site(request):
     return render(request, 'app1/asset_site.html', {'assets': assets, 'sites': sites, 'selected_site_name': site_name})
 
 
-
-
 def asset_details(request, asset_id):
     asset = get_object_or_404(Asset, asset_id=asset_id)
     return render(request, 'app1/view_asset.html', {'asset': asset})
@@ -323,7 +321,23 @@ class DownloadDatabaseView(APIView):
             return response
 
 def exit(request):
-    assets = Asset.objects.filter(status='inactive')
+    # Get the site_name from request GET parameters or session
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    
+    if site_name:
+        # Save the site_name in session
+        request.session['site_name'] = site_name
+        
+        # Get the Site instance based on site_name
+        site = get_object_or_404(Site, name=site_name)
+        
+        # Filter assets based on the Site instance
+        assets = Asset.objects.filter(status='inactive', site=site)
+    else:
+        # Handle the case where site_name is not provided
+        assets = Asset.objects.filter(status='inactive')
+
+    # Render the response with the filtered assets
     return render(request, 'app1/exit_status.html', {'assets': assets})
 
 

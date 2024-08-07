@@ -8,105 +8,152 @@ ansar@mail.com
 
 make parameter dynamic
 
+.sidebar a.sub-point {
+    padding-left: 30px; /* Indent sub-points */
+    color: #666; /* Lighter color for sub-points */
+}
 
+.sidebar a.sub-point:hover {
+    color: #333; /* Darker color on hover */
+}
+
+.sub-point i {
+    margin-right: 5px; /* Space between icon and text */
+    color: #333; /* Color for the dot */
+    font-size: 10px; /* Size of the dot icon */
+
+}
+
+
+{% if site_name %}
+    <a href="#" class="sub-point"><i class="fas fa-circle"></i> {{ site_name }}</a>
+{% endif %}
+
+*********************
 *********************
 
 
-
-
-i don't want signup in page so i comment out signup code in html so now 
-problem is when i login using incorrect email or password it not give me error invalid email password 
-
-this is login and signup view "@csrf_exempt
-def signup_view_new(request):
-    if request.method == 'POST':
-        form = SignUpForm_new(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password'])
-            user.save()
-            messages.success(request, 'Signup successful. Please log in.')
-            return redirect('login')  # Redirect to login page after successful signup
-    else:
-        form = SignUpForm_new()
-    return render(request, 'app1/signup.html', {'form': form, 'is_signup_page': True})
-
-
-from .forms import LoginForm_new
-
-@csrf_protect
-def login_view_new(request):
-    if request.method == 'POST':
-        form = LoginForm_new(request.POST)
-        if form.is_valid():
-            # Convert email to lowercase before authentication
-            email = form.cleaned_data.get('email').lower()
-            password = form.cleaned_data.get('password')
-            user = authenticate(request, email=email, password=password)
-            if user is not None:
-                login(request, user)
-                messages.success(request, 'Login successful.')
-                return redirect('sites')
-            else:
-                messages.error(request, 'Invalid email or password.')
-    else:
-        form = LoginForm_new()
-    return render(request, 'app1/signup.html', {'form': form, 'is_login_page': True})"
-
-this is signup.html "<form id="signin-form" action="{% url 'login' %}" method="POST" class="auth-form active">
-    {% csrf_token %}
-    <label for="signin-email">E-mail</label>
-    <input type="email" id="signin-email" name="email" placeholder="Email" required>
-    <label for="signin-password">Password</label>
-    <input type="password" id="signin-password" name="password" placeholder="Password" required>
-    <button type="submit">Get Started</button>
-    {% if form.errors %}
-        <div class="error-message">
-            {% for field, error in form.errors.items %}
-                {{ error }}
-            {% endfor %}
-        </div>
-    {% endif %}
-</form>
-
-<!-- Signup Form 
-<form id="signup-form" action="{% url 'signup' %}" method="post" class="auth-form">
-    {% csrf_token %}
-    <label for="signup-name">Name</label>
-    <input type="text" id="signup-name" name="name" placeholder="Name" required>
-    
-    <label for="signup-email">E-mail</label>
-    <input type="email" id="signup-email" name="email" placeholder="Email" required>
-    
-    <label for="signup-password">Password</label>
-    <input type="password" id="signup-password" name="password" placeholder="Password" required>
-    
-    <label for="signup-company-name">Company Name</label>
-    <input type="text" id="signup-company-name" name="company_name" placeholder="Company Name" required>
-    
-    <label for="signup-job-role">Job Role</label>
-    <input type="text" id="signup-job-role" name="job_role" placeholder="Job Role" required>
-    
-    <label for="signup-mycompany-id">Company ID</label>
-    <input type="text" id="signup-mycompany-id" name="mycompany_id" placeholder="Company ID" required>
-    
-    <label for="signup-tag-id">Tag ID</label>
-    <input type="text" id="signup-tag-id" name="tag_id" placeholder="Tag ID" required>
-    
-    <label for="signup-job-location">Job Location</label>
-    <input type="text" id="signup-job-location" name="job_location" placeholder="Job Location" required>
-    
-    <button type="submit">Sign up</button>
-    
-    {% if form.errors %}
-        <div class="error-message">
-            {% for field, error in form.errors.items %}
-                {{ error }}
-            {% endfor %}
-        </div>
-    {% endif %}
-</form>
--->
+i use this html code for dropdown in dropdown it returns all site 
+"{% if first_site_name %}
+<div class="dropdownl">
+    <a href="#" class="dropdown-link">
+        <i class="fas fa-circle"></i> {{ first_site_name }}
+    </a>
+    <div class="dropdown-contentl">
+        {% for site in sites %}
+            <a href="{% url 'get_all' %}?site_name={{ site.name }}">{{ site.name }}</a>
+        {% endfor %}
+    </div>
 </div>
-</div>
-<div id="popup-message" class="popup-message"></div>
+{% endif %}"
+
+and add this line in get function "first_site_name = sites.first().name if sites.exists() else None add only this 
+line "
+see "@login_required
+def site_view(request):
+    user = request.user
+
+    if user.is_staff and not user.is_superuser:
+        # If the user is a sub-admin, filter the sites based on the user's permissions
+        sites = user.sites.annotate(
+            total_users=Count('userenrolled'),
+            active_users=Count('userenrolled', filter=Q(userenrolled__status='active')),
+            inactive_users=Count('userenrolled', filter=Q(userenrolled__status='inactive'))
+        )
+    else:
+        # If the user is a super admin, show all sites
+        sites = Site.objects.annotate(
+            total_users=Count('userenrolled'),
+            active_users=Count('userenrolled', filter=Q(userenrolled__status='active')),
+            inactive_users=Count('userenrolled', filter=Q(userenrolled__status='inactive'))
+        )
+    first_site_name = sites.first().name if sites.exists() else None
+
+    return render(request, 'app1/site.html', {
+        'sites': sites,
+        'first_site_name': first_site_name,
+    })"
+
+now i want to data same in following functions without changing these function functionality "def report_view(request):
+site_name = request.GET.get('site_name') or request.session.get('site_name')
+if site_name:
+    request.session['site_name'] = site_name
+
+try:
+    active_users = UserEnrolled.objects.filter(status='active').count()
+    inactive_users = UserEnrolled.objects.filter(status='inactive').count()
+    pending_users = UserEnrolled.objects.filter(status='pending').count()
+    total_users = active_users + inactive_users + pending_users
+
+    labels = ['Active', 'Inactive', 'Pending']
+    sizes = [active_users, inactive_users, pending_users]
+    colors = ['#071390', '#5052cc', '#adaef0']
+
+    plt.figure(figsize=(6, 6))
+    plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140, wedgeprops=dict(width=0.3))
+    plt.text(0, 0, f'{total_users}', ha='center', va='center', fontsize=24)
+    plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+    chart_filename = 'pie_chart.png'
+    chart_path = os.path.join(settings.MEDIA_ROOT, chart_filename)
+    plt.savefig(chart_path)
+    plt.close()
+
+    chart_url = os.path.join(settings.MEDIA_URL, chart_filename)
+    return render(request, 'app1/report.html', {'chart_url': chart_url, 'site_name': site_name, 
+                                                'active_users': active_users, 'inactive_users': inactive_users,
+                                                'pending_users': pending_users, 'total_users': total_users})
+except Exception as e:
+    return render(request, 'app1/error.html', {'error_message': str(e), 'site_name': site_name})"
+
+"def notification_view(request):
+site_name = request.GET.get('site_name') or request.session.get('site_name')
+if site_name:
+    request.session['site_name'] = site_name
+
+noti_data = Notification.objects.all()
+
+return render(request, 'app1/notification1.html', {'noti_data': noti_data, 'site_name': site_name})"
+
+"def company_view(request):
+site_name = request.GET.get('site_name') or request.session.get('site_name')
+if site_name:
+    request.session['site_name'] = site_name
+
+compy = company.objects.all()
+return render(request, 'app1/company.html', {'compy': compy, 'site_name': site_name})"
+
+
+
+****************
+
+
+
+def report_view(request):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+
+    # Add this line to get the first site name
+    sites = Site.objects.all()  # Assuming Site is the model for sites
+    first_site_name = sites.first().name if sites.exists() else None
+
+    try:
+        active_users = UserEnrolled.objects.filter(status='active').count()
+        inactive_users = UserEnrolled.objects.filter(status='inactive').count()
+        pending_users = UserEnrolled.objects.filter(status='pending').count()
+        total_users = active_users + inactive_users + pending_users
+
+        # ... rest of the code to generate the pie chart ...
+
+        return render(request, 'app1/report.html', {
+            'chart_url': chart_url,
+            'site_name': site_name,
+            'active_users': active_users,
+            'inactive_users': inactive_users,
+            'pending_users': pending_users,
+            'total_users': total_users,
+            'first_site_name': first_site_name  # Include first_site_name in the context
+        })
+    except Exception as e:
+        return render(request, 'app1/error.html', {'error_message': str(e), 'site_name': site_name})

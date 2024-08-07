@@ -108,6 +108,9 @@ def report_view(request):
     if site_name:
         request.session['site_name'] = site_name
 
+    sites = Site.objects.all()
+    site_names = [(site.name, site.name) for site in sites]  # Create a tuple list for the dropdown
+
     try:
         active_users = UserEnrolled.objects.filter(status='active').count()
         inactive_users = UserEnrolled.objects.filter(status='inactive').count()
@@ -131,7 +134,8 @@ def report_view(request):
         chart_url = os.path.join(settings.MEDIA_URL, chart_filename)
         return render(request, 'app1/report.html', {'chart_url': chart_url, 'site_name': site_name, 
                                                     'active_users': active_users, 'inactive_users': inactive_users,
-                                                    'pending_users': pending_users, 'total_users': total_users})
+                                                    'pending_users': pending_users, 'total_users': total_users,
+                                                    'site_names': site_names })
     except Exception as e:
         return render(request, 'app1/error.html', {'error_message': str(e), 'site_name': site_name})
 
@@ -303,9 +307,11 @@ def asset_site(request):
     page_number = request.GET.get('page')
     assets = paginator.get_page(page_number)
 
+ 
     sites = Site.objects.all()
+    site_names = [(site.name, site.name) for site in sites]
 
-    return render(request, 'app1/asset_site.html', {'assets': assets, 'sites': sites, 'selected_site_name': site_name})
+    return render(request, 'app1/asset_site.html', {'assets': assets, 'sites': sites, 'site_name': site_name,'site_names':site_names})
 
 
 def asset_details(request, asset_id):
@@ -346,6 +352,10 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def site_view(request):
+    
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
     user = request.user
 
     if user.is_staff and not user.is_superuser:
@@ -362,9 +372,14 @@ def site_view(request):
             active_users=Count('userenrolled', filter=Q(userenrolled__status='active')),
             inactive_users=Count('userenrolled', filter=Q(userenrolled__status='inactive'))
         )
+    sites = Site.objects.all()
+    site_names = [(site.name, site.name) for site in sites]
+
 
     return render(request, 'app1/site.html', {
         'sites': sites,
+        'site_name':site_name,
+        'site_names':site_names
     })
     
 def time_shedule(request):
@@ -571,7 +586,9 @@ def company_view(request):
         request.session['site_name'] = site_name
 
     compy = company.objects.all()
-    return render(request, 'app1/company.html', {'compy': compy, 'site_name': site_name})
+    sites = Site.objects.all()
+    site_names = [(site.name, site.name) for site in sites]  # Create a tuple list for the dropdown
+    return render(request, 'app1/company.html', {'compy': compy, 'site_name': site_name,'site_names':site_names})
 
 
 def add_company_data(request):
@@ -738,8 +755,10 @@ def notification_view(request):
         request.session['site_name'] = site_name
 
     noti_data = Notification.objects.all()
+    sites = Site.objects.all()
+    site_names = [(site.name, site.name) for site in sites]  # Create a tuple list for the dropdown
 
-    return render(request, 'app1/notification1.html', {'noti_data': noti_data, 'site_name': site_name})
+    return render(request, 'app1/notification1.html', {'noti_data': noti_data, 'site_name': site_name,'site_names': site_names})
 
 
 def orientation_task(request):
@@ -925,7 +944,13 @@ class UpdateOrientationAPIView(APIView):
 
 
 def site_document(request):
-    return render(request,'app1/site_documents.html')
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+        
+    sites = Site.objects.all()
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request,'app1/site_documents.html',{'site_name':site_name,'site_names':site_names})
 
 def preshift(request):
     site_name = request.GET.get('site_name') or request.session.get('site_name')
@@ -1317,8 +1342,8 @@ def onsite_user(request):
     on_site_users = paginator.get_page(page_number)
 
     sites = Site.objects.all()  # Get all sites to display in the template
-
-    return render(request, 'app1/onsite_user.html', {'on_site_users': on_site_users, 'sites': sites, 'selected_site_name': site_name})
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/onsite_user.html', {'on_site_users': on_site_users, 'sites': sites, 'site_name': site_name,'site_names':site_names})
 
 def delete_selected5(request):
     if request.method == 'POST':

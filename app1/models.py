@@ -137,7 +137,7 @@ class Asset(models.Model):
         ('active', 'Active'),
         ('inactive', 'Inactive'),
     ]
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='inactive')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='active')
     location = models.CharField(max_length=100, blank=True, null=True)
     time_log = models.DateTimeField(auto_now=True)
     site = models.ForeignKey('Site', on_delete=models.CASCADE)

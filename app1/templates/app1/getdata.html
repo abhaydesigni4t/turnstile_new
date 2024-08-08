@@ -341,28 +341,28 @@
             color: #ffffff;
         }
 
-        .edit-btn
-             {
-        background-color: #4CAF50;
-        color: white;
-        padding: 8px 16px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-right: 5px;
-        text-decoration: none;
-    }
-
-    .delete-btn {
-        background-color: #f2463d;
-        color: white;
-        padding: 8px 16px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-right: 5px;
-        text-decoration: none;
-    }
+        .edit-btn {
+            background-color: #dbdbdb;
+            color: black;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            text-decoration: none;
+        }
+    
+        .dropdown-contentb .delete-btn {
+            background-color: #071390;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            text-decoration: none;
+            
+        }
         .inactive-btn {
             background-color: #ffc107;
             color: #ffffff;
@@ -515,6 +515,77 @@
     th.desc::after {
         content: "\f0dd"; /* FontAwesome sort down */
     }
+
+    .dropdownl {
+        position: relative;
+        display: inline-block;
+        margin-left:30px;
+        padding:-5px;
+       
+    }
+    
+    /* Style for the dropdown link */
+    .dropdown-link {
+        display: block;
+        padding: 10px 15px;
+        color: #333;
+        text-decoration: none;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 10px;
+        transition: background-color 0.3s ease;
+    }
+    
+    .dropdown-link:hover {
+        background-color: #e2e6ea;
+    }
+    
+    /* Hidden by default (not displayed) */
+    .dropdown-contentl {
+        display: none;
+        position: absolute;
+        background-color: #ffffff;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    /* Style for dropdown items */
+    .dropdown-contentl a {
+        color: #333;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        font-size: 12px;
+        transition: background-color 0.3s ease;
+        text-align:center;
+    }
+    
+    .dropdown-contentl a:hover {
+        background-color: #f1f1f1;
+    }
+    
+    /* Show the dropdown content on hover */
+    .dropdownl:hover .dropdown-contentl {
+        display: block;
+    }
+    
+    /* Adjust dropdown link for better alignment */
+    .dropdown-link {
+        display: flex;
+        align-items: center;
+        padding:-5px;
+    }
+    
+    .dropdown-link i {
+        margin-right: 8px;
+        font-size:10px;
+    }
+    
     </style>
 </head>
 
@@ -558,7 +629,20 @@
             <a href="#"><img src="{% static 'app1/images/logo.png' %}" alt="Logo"></a>
         </div>
         
-        <a href="{% url 'sites' %}"><i class="fas fa-globe"></i> Site Management</a>
+        <a href="{% url 'sites' %}?site_name={{ site_name }}"><i class="fas fa-globe"></i> Site Management</a>
+        <!-- Dropdown Link for First Site -->
+        {% if site_names %}
+        <div class="dropdownl">
+            <a href="#" class="dropdown-link">
+                <i class="fa fa-circle"></i> {{ site_name }}
+            </a>
+            <div class="dropdown-contentl">
+                {% for name in site_names %}
+                    <a href="{% url 'get_all' %}?site_name={{ name.0 }}">{{ name.1 }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}   
         <a href="{% url 'report' %}?site_name={{ site_name }}"><i class="fas fa-chart-line"></i> Analytics & Reports</a>
         <a href="{% url 'notification1' %}?site_name={{ site_name }}"><i class="fas fa-bell"></i> Notifications</a>
         <a href="{% url 'company' %}?site_name={{ site_name }}"><i class="fas fa-building"></i> Company</a>
@@ -586,30 +670,25 @@
     <div id="table-container">
 
         <div class="filter-container">
-            <form id="filterForm" method="get" action="{% url 'get_all' %}">
-                <label for="filterName">Name:</label>
-                <input type="text" id="filterName" name="filterName" value="{{ request.GET.filterName|default_if_none:'' }}">
+            <label for="filterName">Name:</label>
+            <input type="text" id="filterName" name="filterName" value="{{ request.GET.filterName|default_if_none:'' }}">
         
-                <label for="filterCompanyName">Company Name:</label>
-                <input type="text" id="filterCompanyName" name="filterCompanyName" value="{{ request.GET.filterCompanyName|default_if_none:'' }}">
+            <label for="filterCompanyName">Company Name:</label>
+            <input type="text" id="filterCompanyName" name="filterCompanyName" value="{{ request.GET.filterCompanyName|default_if_none:'' }}">
         
-                <label for="filterJobRole">Job Role:</label>
-                <input type="text" id="filterJobRole" name="filterJobRole" value="{{ request.GET.filterJobRole|default_if_none:'' }}">
+            <label for="filterJobRole">Job Role:</label>
+            <input type="text" id="filterJobRole" name="filterJobRole" value="{{ request.GET.filterJobRole|default_if_none:'' }}">
         
-                <label for="filterJobLocation">Job Location:</label>
-                <input type="text" id="filterJobLocation" name="filterJobLocation" value="{{ request.GET.filterJobLocation|default_if_none:'' }}">
+            <label for="filterJobLocation">Job Location:</label>
+            <input type="text" id="filterJobLocation" name="filterJobLocation" value="{{ request.GET.filterJobLocation|default_if_none:'' }}">
         
-                <label for="filterStatus">Status:</label>
-                <select id="filterStatus" name="filterStatus">
-                    <option value="">All</option>
-                    <option value="active" {% if request.GET.filterStatus == 'active' %}selected{% endif %}>Active</option>
-                    <option value="inactive" {% if request.GET.filterStatus == 'inactive' %}selected{% endif %}>Inactive</option>
-                    <option value="pending" {% if request.GET.filterStatus == 'pending' %}selected{% endif %}>Pending</option>
-                </select>
-        
-                <button type="submit">Apply Filters</button>
-            </form>
-         
+            <label for="filterStatus">Status:</label>
+            <select id="filterStatus" name="filterStatus">
+                <option value="">All</option>
+                <option value="active" {% if request.GET.filterStatus == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if request.GET.filterStatus == 'inactive' %}selected{% endif %}>Inactive</option>
+                <option value="pending" {% if request.GET.filterStatus == 'pending' %}selected{% endif %}>Pending</option>
+            </select>
         </div>
 
         <form method="post" action="{% url 'delete_selected2' %}">
@@ -815,6 +894,45 @@
     </script>
     
     
+    <script>
+        // This function will be used to filter the data
+        function filterData() {
+            var filterName = document.getElementById('filterName').value.toLowerCase();
+            var filterCompanyName = document.getElementById('filterCompanyName').value.toLowerCase();
+            var filterJobRole = document.getElementById('filterJobRole').value.toLowerCase();
+            var filterJobLocation = document.getElementById('filterJobLocation').value.toLowerCase();
+            var filterStatus = document.getElementById('filterStatus').value.toLowerCase();
+    
+            var dataTable = document.getElementById('customers'); // Make sure the ID matches the table ID in your HTML
+            var rows = dataTable.getElementsByTagName('tr');
+    
+            for (var i = 1; i < rows.length; i++) { // Start from 1 to skip the header row
+                // Adjust the indices to match the correct columns in your HTML table
+                var name = rows[i].getElementsByTagName('td')[3].textContent || rows[i].getElementsByTagName('td')[3].innerText;
+                var companyName = rows[i].getElementsByTagName('td')[4].textContent || rows[i].getElementsByTagName('td')[4].innerText;
+                var jobRole = rows[i].getElementsByTagName('td')[5].textContent || rows[i].getElementsByTagName('td')[5].innerText;
+                var jobLocation = rows[i].getElementsByTagName('td')[8].textContent || rows[i].getElementsByTagName('td')[8].innerText;
+                var status = rows[i].getElementsByTagName('td')[14].textContent || rows[i].getElementsByTagName('td')[14].innerText;
+    
+                if (name.toLowerCase().indexOf(filterName) !== -1 &&
+                    companyName.toLowerCase().indexOf(filterCompanyName) !== -1 &&
+                    jobRole.toLowerCase().indexOf(filterJobRole) !== -1 &&
+                    jobLocation.toLowerCase().indexOf(filterJobLocation) !== -1 &&
+                    (filterStatus === '' || status.toLowerCase().indexOf(filterStatus) !== -1)) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        }
+    
+        // Add event listeners to the filter inputs
+        document.getElementById('filterName').addEventListener('keyup', filterData);
+        document.getElementById('filterCompanyName').addEventListener('keyup', filterData);
+        document.getElementById('filterJobRole').addEventListener('keyup', filterData);
+        document.getElementById('filterJobLocation').addEventListener('keyup', filterData);
+        document.getElementById('filterStatus').addEventListener('change', filterData);
+    </script>
 </body>
 
 </html>

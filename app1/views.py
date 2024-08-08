@@ -76,14 +76,21 @@ class UserEnrolledRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = UserEnrolledSerializer
 
 def post_notification(request):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+        
     if request.method == 'POST':
         form = NotificationForm(request.POST)
         if form.is_valid():
             notification = form.save()
-            return redirect('success')
+            return redirect('notification1')
     else:
         form = NotificationForm()
-    return render(request, 'app1/notification.html', {'form': form})
+        
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/notification.html', {'form': form,'site_name':site_name,'site_names':site_names})
 
 def success_page(request):
     return render(request, 'app1/success.html')
@@ -145,36 +152,16 @@ class get_data(ListView):
     model = UserEnrolled
     template_name = 'app1/getdata.html'
     context_object_name = 'data'
-    paginate_by = 10
+    paginate_by = 3
 
     def get_queryset(self):
         queryset = UserEnrolled.objects.all()
-
-        # Get site name from URL parameters or session
         site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
 
         # Filter by site name if provided
         if site_name:
             queryset = queryset.filter(site__name=site_name)
-
-        # Other filters
-        filter_name = self.request.GET.get('filterName')
-        filter_company_name = self.request.GET.get('filterCompanyName')
-        filter_job_role = self.request.GET.get('filterJobRole')
-        filter_job_location = self.request.GET.get('filterJobLocation')
-        filter_status = self.request.GET.get('filterStatus')
-
-        if filter_name:
-            queryset = queryset.filter(name__icontains=filter_name)
-        if filter_company_name:
-            queryset = queryset.filter(company_name__icontains=filter_company_name)
-        if filter_job_role:
-            queryset = queryset.filter(job_role__icontains=filter_job_role)
-        if filter_job_location:
-            queryset = queryset.filter(job_location__icontains=filter_job_location)
-        if filter_status:
-            queryset = queryset.filter(status__iexact=filter_status)
-
+            
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -193,6 +180,9 @@ class get_data(ListView):
         context['paginator'] = paginator
         
         context['data'] = list(enumerate(page_obj.object_list, start=offset + 1))
+        sites = Site.objects.all()
+        site_names = [(site.name, site.name) for site in sites]
+        context['site_names'] = site_names
         return context
 
     
@@ -204,6 +194,18 @@ class create_data(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
+        
+        # Save site_name to session if it exists
+        if site_name:
+            self.request.session['site_name'] = site_name
+        context['site_name'] = site_name
+        
+        sites = Site.objects.all()
+        site_names = [(site.name, site.name) for site in sites]
+        context['site_names'] = site_names
+    
         context['data'] = UserEnrolled.objects.all()
         return context
 
@@ -212,6 +214,25 @@ class UpdateData(UpdateView):
     fields = ['name','company_name','job_role','mycompany_id','tag_id','job_location','orientation','facial_data','my_comply','expiry_date','status','email','site']     
     template_name = 'app1/add_user.html'
     success_url = reverse_lazy('get_all')
+    
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+
+        # Handle site_name from request or session
+        site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
+        if site_name:
+            self.request.session['site_name'] = site_name
+
+        # Get all sites to display in the template
+        sites = Site.objects.all()
+        site_names = [(site.name, site.name) for site in sites]
+
+        # Add site_names and site_name to the context
+        context['site_names'] = site_names
+        context['site_name'] = site_name
+
+        return context
 
 class TaskDeleteView(DeleteView):
     model = UserEnrolled
@@ -251,6 +272,10 @@ def asset_management(request):
     return render(request,'app1/asset_management.html')
 
 def add_asset(request):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+    
     if request.method == 'POST':
         form = AssetForm(request.POST,request.FILES)
         if form.is_valid():
@@ -261,12 +286,19 @@ def add_asset(request):
                 form.add_error('asset_id', str(e))  
     else:
         form = AssetForm()
-    return render(request, 'app1/add_asset.html', {'form': form})
+    
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/add_asset.html', {'form': form,'site_name':site_name,'site_names':site_names})
 
 
 def update_asset(request, asset_id):
     asset = get_object_or_404(Asset, asset_id=asset_id)
     
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+        
     if request.method == 'POST':
         form = AssetForm(request.POST, request.FILES, instance=asset)
         if form.is_valid():
@@ -278,7 +310,9 @@ def update_asset(request, asset_id):
     else:
         form = AssetForm(instance=asset)
     
-    return render(request, 'app1/add_asset.html', {'form': form})
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/add_asset.html', {'form': form,'site_name':site_name,'site_names':site_names})
 
 def delete_asset(request, asset_id):
     asset = get_object_or_404(Asset, asset_id=asset_id)
@@ -344,7 +378,9 @@ def exit(request):
         assets = Asset.objects.filter(status='inactive')
 
     # Render the response with the filtered assets
-    return render(request, 'app1/exit_status.html', {'assets': assets})
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/exit_status.html', {'assets': assets,'site_name':site_name,'site_names':site_names})
 
 
 from django.db.models import Count, Q
@@ -372,8 +408,8 @@ def site_view(request):
             active_users=Count('userenrolled', filter=Q(userenrolled__status='active')),
             inactive_users=Count('userenrolled', filter=Q(userenrolled__status='inactive'))
         )
-    sites = Site.objects.all()
-    site_names = [(site.name, site.name) for site in sites]
+    sitess = Site.objects.all()
+    site_names = [(site.name, site.name) for site in sitess]
 
 
     return render(request, 'app1/site.html', {
@@ -410,8 +446,8 @@ def setting_turn(request):
     turnstiles = paginator.get_page(page_number)
 
     sites = Site.objects.all()  # Get all sites to display in the template
-
-    return render(request, 'app1/setting_turn.html', {'turnstiles': turnstiles, 'sites': sites, 'selected_site_name': site_name})
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/setting_turn.html', {'turnstiles': turnstiles, 'sites': sites, 'site_name': site_name,'site_names':site_names})
 
 
 class ActionStatusAPIView(APIView):
@@ -552,6 +588,10 @@ class SiteListAPIView(generics.ListAPIView):
     serializer_class = SiteSerializer
 
 def add_site(request):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+        
     if request.method == 'POST':
         form = SiteForm(request.POST,request.FILES)
         if form.is_valid():
@@ -559,7 +599,10 @@ def add_site(request):
             return redirect('sites') 
     else:
         form = SiteForm()
-    return render(request, 'app1/add_site.html', {'form': form})
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    
+    return render(request, 'app1/add_site.html', {'form': form,'site_name':site_name,'site_names':site_names})
 
 class SiteUpdateView(UpdateView):
     model = Site
@@ -571,9 +614,16 @@ class SiteUpdateView(UpdateView):
         
         asset_instance = get_object_or_404(Site, pk=kwargs['pk'])
         
+        site_name = request.GET.get('site_name') or request.session.get('site_name')
+        if site_name:
+            request.session['site_name'] = site_name
+            
         form = self.form_class(instance=asset_instance)
         
-        return self.render_to_response({'form': form})
+        sites = Site.objects.all()
+        site_names = [(site.name, site.name) for site in sites]
+        return self.render_to_response({'form': form,'site_names': site_names,
+            'site_name': site_name, })
 
 class SiteDeleteView(DeleteView):
     model = Site
@@ -592,6 +642,10 @@ def company_view(request):
 
 
 def add_company_data(request):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+    
     if request.method == 'POST':
         form = CompanyForm(request.POST,request.FILES)
         if form.is_valid():
@@ -599,7 +653,10 @@ def add_company_data(request):
             return redirect('company') 
     else:
         form = CompanyForm()
-    return render(request, 'app1/add_company.html', {'form': form})
+        
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/add_company.html', {'form': form,'site_name':site_name,'site_names':site_names})
 
 class CompanyUpdateView(UpdateView):
     model = company
@@ -611,9 +668,16 @@ class CompanyUpdateView(UpdateView):
         
         asset_instance = get_object_or_404(company, pk=kwargs['pk'])
         
+        site_name = request.GET.get('site_name') or request.session.get('site_name')
+        if site_name:
+            request.session['site_name'] = site_name
+            
         form = self.form_class(instance=asset_instance)
         
-        return self.render_to_response({'form': form})
+        sites = Site.objects.all()
+        site_names = [(site.name, site.name) for site in sites]
+        return self.render_to_response({'form': form,'site_names': site_names,
+            'site_name': site_name, })
 
 class CompanyDeleteView(DeleteView):
     model = company
@@ -645,8 +709,8 @@ def timesche(request):
     data = paginator.get_page(page_number)
 
     sites = Site.objects.all()  # Get all sites to display in the template
-
-    return render(request, 'app1/time_shedule.html', {'data': data, 'sites': sites, 'selected_site_name': site_name})
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/time_shedule.html', {'data': data, 'sites': sites, 'site_name': site_name,'site_names':site_names})
 
 
 class NotificationList(generics.ListAPIView):
@@ -665,6 +729,9 @@ class FileUploadView(APIView):
             return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 def add_timesh(request):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
     if request.method == 'POST':
         form = timescheduleForm(request.POST)
         if form.is_valid():
@@ -672,10 +739,17 @@ def add_timesh(request):
             return redirect('time') 
     else:
         form = timescheduleForm()
-    return render(request, 'app1/add_time.html', {'form': form})
+    
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/add_time.html', {'form': form,'site_name':site_name,'site_names':site_names})
 
 def edit_timeschedule(request, id):
     instance = get_object_or_404(timeschedule, id=id)
+    
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
     
     if request.method == 'POST':
         form = timescheduleForm(request.POST, instance=instance)
@@ -685,7 +759,9 @@ def edit_timeschedule(request, id):
     else:
         form = timescheduleForm(instance=instance)
 
-    return render(request, 'app1/add_time.html', {'form': form})
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/add_time.html', {'form': form,'site_name':site_name,'site_names':site_names})
 
 def delete_timeschedule(request, id):
     instance = get_object_or_404(timeschedule, id=id)
@@ -695,6 +771,10 @@ def delete_timeschedule(request, id):
     return render(request, 'app1/data_confirm_delete6.html', {'instance': instance})
 
 def add_turnstile(request):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+    
     if request.method == 'POST':
         form = TurnstileForm(request.POST)
         if form.is_valid():
@@ -702,7 +782,10 @@ def add_turnstile(request):
             return redirect('setting_t') 
     else:
         form = TurnstileForm()
-    return render(request, 'app1/add_turnstile.html', {'form': form})
+        
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/add_turnstile.html', {'form': form,'site_name':site_name,'site_names':site_names})
 
 def delete_selected(request):
     if request.method == 'POST':
@@ -718,6 +801,25 @@ class TurnstileUpdateView(UpdateView):
     form_class = TurnstileForm
     template_name = 'app1/add_turnstile.html' 
     success_url = reverse_lazy('setting_t')
+    
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+
+        # Handle site_name from request or session
+        site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
+        if site_name:
+            self.request.session['site_name'] = site_name
+
+        # Get all sites to display in the template
+        sites = Site.objects.all()
+        site_names = [(site.name, site.name) for site in sites]
+
+        # Add site_names and site_name to the context
+        context['site_names'] = site_names
+        context['site_name'] = site_name
+
+        return context
 
 
 class Turnstile_API(APIView):
@@ -780,10 +882,15 @@ def orientation_task(request):
         form = OrientationForm()
 
     latest_orientation = Orientation.objects.last()
+    
+    sites = Site.objects.all()
+    site_names = [(site.name, site.name) for site in sites]
+    
     return render(request, 'app1/orientation.html', {
         'form': form,
         'latest_orientation': latest_orientation,
         'site_name': site_name,
+        'site_names':site_names,
         'success_message': success_message  # Pass success message to template
     })
 
@@ -971,12 +1078,18 @@ def preshift(request):
     paginator = Paginator(queryset, 10)  # 10 items per page
     page_number = request.GET.get('page')
     preshifts = paginator.get_page(page_number)
-
-    return render(request, 'app1/preshift.html', {'preshifts': preshifts, 'site_name': site_name})
+    sites = Site.objects.all()
+    site_names = [(site.name, site.name) for site in sites]
+    
+    return render(request, 'app1/preshift.html', {'preshifts': preshifts, 'site_name': site_name,'site_names':site_names})
 
 
 
 def add_preshift(request):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+        
     if request.method == 'POST':
         form = PreshitForm(request.POST, request.FILES)
         if form.is_valid():
@@ -986,10 +1099,18 @@ def add_preshift(request):
         form = PreshitForm()
     
     documents = PreShift.objects.all()
-    return render(request, 'app1/add_preshift.html', {'form': form, 'documents': documents})
+    
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/add_preshift.html', {'form': form, 'documents': documents,'site_name':site_name,'site_names':site_names})
 
 def edit_preshift(request, pk):
     preshift = get_object_or_404(PreShift, pk=pk)
+    
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+    
     if request.method == 'POST':
         form = PreshitForm(request.POST, request.FILES, instance=preshift)
         if form.is_valid():
@@ -998,7 +1119,9 @@ def edit_preshift(request, pk):
     else:
         form = PreshitForm(instance=preshift)
     
-    return render(request, 'app1/edit_preshift.html', {'form': form, 'preshift': preshift})
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/edit_preshift.html', {'form': form, 'preshift': preshift,'site_name':site_name,'site_names':site_names})
 
 def delete_preshift(request, pk):
     preshift = get_object_or_404(PreShift, pk=pk)
@@ -1028,11 +1151,18 @@ def toolbox(request):
     page_number = request.GET.get('page')
     toolbox_talks = paginator.get_page(page_number)
 
-    return render(request, 'app1/toolbox.html', {'toolbox_talks': toolbox_talks, 'site_name': site_name})
+    sites = Site.objects.all()
+    site_names = [(site.name, site.name) for site in sites]
+    
+    return render(request, 'app1/toolbox.html', {'toolbox_talks': toolbox_talks, 'site_name': site_name,'site_names':site_names})
 
 
 
 def add_toolbox(request):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+    
     if request.method == 'POST':
         form =ToolboxForm(request.POST, request.FILES)
         if form.is_valid():
@@ -1042,10 +1172,18 @@ def add_toolbox(request):
         form = ToolboxForm()
     
     documents = ToolBox.objects.all()
-    return render(request, 'app1/add_toolbox.html', {'form': form, 'documents': documents})
+    
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/add_toolbox.html', {'form': form, 'documents': documents,'site_name':site_name,'site_names':site_names})
 
 def edit_toolbox(request, pk):
     toolbox = get_object_or_404(ToolBox, pk=pk)
+    
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+
     if request.method == 'POST':
         form = ToolboxForm(request.POST, request.FILES, instance=toolbox)
         if form.is_valid():
@@ -1054,7 +1192,10 @@ def edit_toolbox(request, pk):
     else:
         form = ToolboxForm(instance=toolbox)
     
-    return render(request, 'app1/edit_toolbox.html', {'form': form, 'toolbox': toolbox})
+    
+    sites = Site.objects.all()  # Get all sites to display in the template
+    site_names = [(site.name, site.name) for site in sites]
+    return render(request, 'app1/edit_toolbox.html', {'form': form, 'toolbox': toolbox,'site_name':site_name,'site_names':site_names})
 
 def delete_toolbox(request, pk):
     toolbox = get_object_or_404(ToolBox, pk=pk)
@@ -2043,6 +2184,10 @@ from .forms import SubAdminCreationForm
 
 @login_required
 def create_subadmin(request):
+    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    if site_name:
+        request.session['site_name'] = site_name
+        
     success_message = None  # Initialize success message variable
 
     if request.method == 'POST':
@@ -2059,14 +2204,18 @@ def create_subadmin(request):
             form = SubAdminCreationForm()  # Reset form after successful submission
         else:
             # Return form errors with the form
+            
             return render(request, 'app1/create_subadmin.html', {'form': form, 'errors': form.errors})
 
     else:
         form = SubAdminCreationForm()
-
+    sites = Site.objects.all()
+    site_names = [(site.name, site.name) for site in sites]
     return render(request, 'app1/create_subadmin.html', {
         'form': form,
         'success_message': success_message,  # Pass success message to template
+        'site_name':site_name,
+        'site_names':site_names,
     })
 
 

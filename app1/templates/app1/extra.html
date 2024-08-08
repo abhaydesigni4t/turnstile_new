@@ -8,152 +8,270 @@ ansar@mail.com
 
 make parameter dynamic
 
-.sidebar a.sub-point {
-    padding-left: 30px; /* Indent sub-points */
-    color: #666; /* Lighter color for sub-points */
-}
-
-.sidebar a.sub-point:hover {
-    color: #333; /* Darker color on hover */
-}
-
-.sub-point i {
-    margin-right: 5px; /* Space between icon and text */
-    color: #333; /* Color for the dot */
-    font-size: 10px; /* Size of the dot icon */
-
-}
-
-
-{% if site_name %}
-    <a href="#" class="sub-point"><i class="fas fa-circle"></i> {{ site_name }}</a>
-{% endif %}
 
 *********************
-*********************
 
+this code filter data from current page if i filter next page data then it not filter correctly 
+so i wanted to filter data from all pages not only in current page
 
-i use this html code for dropdown in dropdown it returns all site 
-"{% if first_site_name %}
-<div class="dropdownl">
-    <a href="#" class="dropdown-link">
-        <i class="fas fa-circle"></i> {{ first_site_name }}
-    </a>
-    <div class="dropdown-contentl">
-        {% for site in sites %}
-            <a href="{% url 'get_all' %}?site_name={{ site.name }}">{{ site.name }}</a>
-        {% endfor %}
-    </div>
-</div>
-{% endif %}"
+this is model "class UserEnrolled(models.Model):
+sr = models.AutoField(primary_key=True, unique=True)
+picture = models.ImageField(upload_to='user_pictures/', blank=True, null=True)
+name = models.CharField(max_length=255)
+company_name = models.CharField(max_length=100)
+job_role = models.CharField(max_length=100)
+mycompany_id = models.CharField(max_length=10)
+tag_id = models.CharField(max_length=50)
+job_location = models.CharField(max_length=100)
+orientation = models.FileField(upload_to='attachments/', blank=True, null=True, validators=[FileExtensionValidator(['jpeg', 'jpg'])])
+facial_data = models.ImageField(upload_to=user_image_upload_path, blank=True, null=True, verbose_name='Facial Data')
+my_comply = models.ImageField(upload_to='compliance_images/', blank=True, null=True)
+expiry_date = models.DateField(blank=True, null=True)
+status = models.CharField(max_length=100, choices=[
+    ('active', 'Active'),
+    ('inactive', 'Inactive'),
+    ('pending', 'Pending'),
+], default='pending')
+email = models.EmailField()
+password = models.CharField(max_length=50)
+site = models.ForeignKey('Site', on_delete=models.CASCADE, blank=True, null=True)
 
-and add this line in get function "first_site_name = sites.first().name if sites.exists() else None add only this 
-line "
-see "@login_required
-def site_view(request):
-    user = request.user
+def _str_(self):
+    return self.name
 
-    if user.is_staff and not user.is_superuser:
-        # If the user is a sub-admin, filter the sites based on the user's permissions
-        sites = user.sites.annotate(
-            total_users=Count('userenrolled'),
-            active_users=Count('userenrolled', filter=Q(userenrolled__status='active')),
-            inactive_users=Count('userenrolled', filter=Q(userenrolled__status='inactive'))
-        )
-    else:
-        # If the user is a super admin, show all sites
-        sites = Site.objects.annotate(
-            total_users=Count('userenrolled'),
-            active_users=Count('userenrolled', filter=Q(userenrolled__status='active')),
-            inactive_users=Count('userenrolled', filter=Q(userenrolled__status='inactive'))
-        )
-    first_site_name = sites.first().name if sites.exists() else None
+def get_folder_name(self):
+    return self.name
 
-    return render(request, 'app1/site.html', {
-        'sites': sites,
-        'first_site_name': first_site_name,
-    })"
+def set_password(self, raw_password):
+    self.password = make_password(raw_password)
 
-now i want to data same in following functions without changing these function functionality "def report_view(request):
-site_name = request.GET.get('site_name') or request.session.get('site_name')
-if site_name:
-    request.session['site_name'] = site_name
+def check_password(self, raw_password):
+    return check_password(raw_password, self.password)"
 
-try:
-    active_users = UserEnrolled.objects.filter(status='active').count()
-    inactive_users = UserEnrolled.objects.filter(status='inactive').count()
-    pending_users = UserEnrolled.objects.filter(status='pending').count()
-    total_users = active_users + inactive_users + pending_users
+this is get view "class get_data(ListView):
+model = UserEnrolled
+template_name = 'app1/getdata.html'
+context_object_name = 'data'
+paginate_by = 3
 
-    labels = ['Active', 'Inactive', 'Pending']
-    sizes = [active_users, inactive_users, pending_users]
-    colors = ['#071390', '#5052cc', '#adaef0']
+def get_queryset(self):
+    queryset = UserEnrolled.objects.all()
+    site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
 
-    plt.figure(figsize=(6, 6))
-    plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140, wedgeprops=dict(width=0.3))
-    plt.text(0, 0, f'{total_users}', ha='center', va='center', fontsize=24)
-    plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-
-    chart_filename = 'pie_chart.png'
-    chart_path = os.path.join(settings.MEDIA_ROOT, chart_filename)
-    plt.savefig(chart_path)
-    plt.close()
-
-    chart_url = os.path.join(settings.MEDIA_URL, chart_filename)
-    return render(request, 'app1/report.html', {'chart_url': chart_url, 'site_name': site_name, 
-                                                'active_users': active_users, 'inactive_users': inactive_users,
-                                                'pending_users': pending_users, 'total_users': total_users})
-except Exception as e:
-    return render(request, 'app1/error.html', {'error_message': str(e), 'site_name': site_name})"
-
-"def notification_view(request):
-site_name = request.GET.get('site_name') or request.session.get('site_name')
-if site_name:
-    request.session['site_name'] = site_name
-
-noti_data = Notification.objects.all()
-
-return render(request, 'app1/notification1.html', {'noti_data': noti_data, 'site_name': site_name})"
-
-"def company_view(request):
-site_name = request.GET.get('site_name') or request.session.get('site_name')
-if site_name:
-    request.session['site_name'] = site_name
-
-compy = company.objects.all()
-return render(request, 'app1/company.html', {'compy': compy, 'site_name': site_name})"
-
-
-
-****************
-
-
-
-def report_view(request):
-    site_name = request.GET.get('site_name') or request.session.get('site_name')
+    # Filter by site name if provided
     if site_name:
-        request.session['site_name'] = site_name
+        queryset = queryset.filter(site__name=site_name)
+    return queryset
 
-    # Add this line to get the first site name
-    sites = Site.objects.all()  # Assuming Site is the model for sites
-    first_site_name = sites.first().name if sites.exists() else None
+def get_context_data(self, **kwargs):
+    context = super().get_context_data(**kwargs)
+    site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
+    if site_name:
+        self.request.session['site_name'] = site_name  # Save site_name to session
+    context['site_name'] = site_name
 
-    try:
-        active_users = UserEnrolled.objects.filter(status='active').count()
-        inactive_users = UserEnrolled.objects.filter(status='inactive').count()
-        pending_users = UserEnrolled.objects.filter(status='pending').count()
-        total_users = active_users + inactive_users + pending_users
+    page = self.request.GET.get('page')
+    paginator = Paginator(self.get_queryset(), self.paginate_by)
+    page_obj = paginator.get_page(page)
+    offset = self.paginate_by * (page_obj.number - 1)
+    context['offset'] = offset
+    context['page_obj'] = page_obj
+    context['paginator'] = paginator
+    
+    context['data'] = list(enumerate(page_obj.object_list, start=offset + 1))
+    sites = Site.objects.all()
+    site_names = [(site.name, site.name) for site in sites]
+    context['site_names'] = site_names
+    return context
+"
+this is html code "<div class="filter-container">
+    <label for="filterName">Name:</label>
+    <input type="text" id="filterName" name="filterName" value="{{ request.GET.filterName|default_if_none:'' }}">
 
-        # ... rest of the code to generate the pie chart ...
+    <label for="filterCompanyName">Company Name:</label>
+    <input type="text" id="filterCompanyName" name="filterCompanyName" value="{{ request.GET.filterCompanyName|default_if_none:'' }}">
 
-        return render(request, 'app1/report.html', {
-            'chart_url': chart_url,
-            'site_name': site_name,
-            'active_users': active_users,
-            'inactive_users': inactive_users,
-            'pending_users': pending_users,
-            'total_users': total_users,
-            'first_site_name': first_site_name  # Include first_site_name in the context
-        })
-    except Exception as e:
-        return render(request, 'app1/error.html', {'error_message': str(e), 'site_name': site_name})
+    <label for="filterJobRole">Job Role:</label>
+    <input type="text" id="filterJobRole" name="filterJobRole" value="{{ request.GET.filterJobRole|default_if_none:'' }}">
+
+    <label for="filterJobLocation">Job Location:</label>
+    <input type="text" id="filterJobLocation" name="filterJobLocation" value="{{ request.GET.filterJobLocation|default_if_none:'' }}">
+
+    <label for="filterStatus">Status:</label>
+    <select id="filterStatus" name="filterStatus">
+        <option value="">All</option>
+        <option value="active" {% if request.GET.filterStatus == 'active' %}selected{% endif %}>Active</option>
+        <option value="inactive" {% if request.GET.filterStatus == 'inactive' %}selected{% endif %}>Inactive</option>
+        <option value="pending" {% if request.GET.filterStatus == 'pending' %}selected{% endif %}>Pending</option>
+    </select>
+</div>
+
+<table id="customers">
+    <tr>
+        <th><input type="checkbox" onClick="toggleAll(this)"></th>
+        <th class="sortable">Sr No</th>
+    <th>Picture</th>
+    <th class="sortable">Name</th>
+    <th class="sortable">Company</th>
+    <th class="sortable">Job</th>
+    <th class="sortable">MC ID</th>
+    <th class="sortable">Tag ID</th>
+    <th class="sortable">Location</th>
+    <th>Email</th>
+    <th>Orientation</th>
+    <th>Facial Data</th>
+    <th>SST</th>
+    <th class="sortable">Expiry Data</th>
+    <th class="sortable">Status</th>
+    <th>Action</th>
+    </tr>
+
+    {% for index,i in data %}
+    <tr>
+        <td><input type="checkbox" name="selected_recordings" value="{{ i.pk }}"></td>
+        
+        <td>{{index}}</td>
+        <td>
+            {% if i.picture %}
+            <img src="{{ i.picture.url }}" alt="user" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+            {% else %}
+            <img src="{% static 'app1/images/img1.jpg' %}" alt="user" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+            {% endif %}
+        </td>
+        
+        
+        <td><a href="{% url 'user_update' i.sr %}"style="text-decoration: none;">{{ i.name }}</a></td>
+        <td>{{i.company_name}}</td>
+        <td>{{i.job_role}}</td>
+        <td>{{i.mycompany_id}}</td>
+        <td>{{i.tag_id}}</td>
+        <td>{{i.job_location}}</td>
+        <td>{{i.email}}</td>
+        {% load custom_filters %}
+        <td>
+            {% if i.orientation %}
+            {% with file_extension=i.orientation.name|lower %}
+            <a href="{{ i.orientation.url }}" target="_blank">
+                <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                            {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                            {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                            {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                            {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                            {% else %}far fa-file
+                        {% endif %}"></i>
+            </a>
+            {% endwith %}
+            {% else %}
+            N/A
+            {% endif %}
+        </td>
+        {% load custom_filters %}
+        <td>
+            {% with file_extension=i.facial_data.name|lower %}
+            <a href="{% url 'show_facial_data_images' i.pk %}" target="_blank">
+                <i class="far fa-file-image
+                    {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                    {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                    {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                    {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                    {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                    {% else %}far fa-file
+                    {% endif %}
+                "></i>
+            </a>
+            {% endwith %}
+        </td>
+        <td>
+            {% if i.my_comply %}
+            {% with file_extension=i.my_comply.name|lower %}
+            <a href="{{ i.my_comply.url }}" target="_blank">
+                <i class="file-icon {% if file_extension|slice:"-4" == '.pdf' %}far fa-file-pdf
+                            {% elif file_extension|slice:"-4" == '.doc' or file_extension|slice:"-5" == '.docx' %}far fa-file-word
+                            {% elif file_extension|slice:"-5" == '.jpeg' or file_extension|slice:"-4" == '.jpg' or file_extension|slice:"-4" == '.png' %}far fa-file-image
+                            {% elif file_extension|slice:"-4" == '.xls' or file_extension|slice:"-5" == '.xlsx' %}far fa-file-excel
+                            {% elif file_extension|slice:"-4" == '.ppt' or file_extension|slice:"-5" == '.pptx' %}far fa-file-powerpoint
+                            {% else %}far fa-file
+                        {% endif %}"></i>
+            </a>
+            {% endwith %}
+            {% else %}
+            N/A
+            {% endif %}
+        </td>
+        <td>{{ i.expiry_date }}</td>
+        <td>{{i.status}}</td>
+        <td>
+            <div class="dropdownb">
+                <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
+                <div class="dropdown-contentb">
+                    <a href="{% url 'user_update' i.sr %}" class="edit-btn">Edit</a>
+                    <a href="{% url 'task_delete' i.pk %}" class="delete-btn">Delete</a>
+                </div>
+            </div>
+        </td>
+        
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+"
+this is js code "<script>
+    // This function will be used to filter the data
+    function filterData() {
+        var filterName = document.getElementById('filterName').value.toLowerCase();
+        var filterCompanyName = document.getElementById('filterCompanyName').value.toLowerCase();
+        var filterJobRole = document.getElementById('filterJobRole').value.toLowerCase();
+        var filterJobLocation = document.getElementById('filterJobLocation').value.toLowerCase();
+        var filterStatus = document.getElementById('filterStatus').value.toLowerCase();
+
+        var dataTable = document.getElementById('customers'); // Make sure the ID matches the table ID in your HTML
+        var rows = dataTable.getElementsByTagName('tr');
+
+        for (var i = 1; i < rows.length; i++) { // Start from 1 to skip the header row
+            // Adjust the indices to match the correct columns in your HTML table
+            var name = rows[i].getElementsByTagName('td')[3].textContent || rows[i].getElementsByTagName('td')[3].innerText;
+            var companyName = rows[i].getElementsByTagName('td')[4].textContent || rows[i].getElementsByTagName('td')[4].innerText;
+            var jobRole = rows[i].getElementsByTagName('td')[5].textContent || rows[i].getElementsByTagName('td')[5].innerText;
+            var jobLocation = rows[i].getElementsByTagName('td')[8].textContent || rows[i].getElementsByTagName('td')[8].innerText;
+            var status = rows[i].getElementsByTagName('td')[14].textContent || rows[i].getElementsByTagName('td')[14].innerText;
+
+            if (name.toLowerCase().indexOf(filterName) !== -1 &&
+                companyName.toLowerCase().indexOf(filterCompanyName) !== -1 &&
+                jobRole.toLowerCase().indexOf(filterJobRole) !== -1 &&
+                jobLocation.toLowerCase().indexOf(filterJobLocation) !== -1 &&
+                (filterStatus === '' || status.toLowerCase().indexOf(filterStatus) !== -1)) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
+            }
+        }
+    }
+
+    // Add event listeners to the filter inputs
+    document.getElementById('filterName').addEventListener('keyup', filterData);
+    document.getElementById('filterCompanyName').addEventListener('keyup', filterData);
+    document.getElementById('filterJobRole').addEventListener('keyup', filterData);
+    document.getElementById('filterJobLocation').addEventListener('keyup', filterData);
+    document.getElementById('filterStatus').addEventListener('change', filterData);
+</script>"
+
+*********************
+
+

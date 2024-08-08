@@ -63,15 +63,9 @@ class AssetForm(forms.ModelForm):
     ]
     asset_category = forms.ChoiceField(choices=asset_category_choices)
 
-    STATUS_CHOICES = [
-        ('active', 'Active'),
-        ('inactive', 'Inactive'),
-    ]
-    status = forms.ChoiceField(choices=STATUS_CHOICES)
-
     class Meta:
         model = Asset
-        fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'footage', 'description', 'asset_category', 'status', 'location', 'site']
+        fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'description', 'asset_category', 'site']
         widgets = {
             'picture': forms.FileInput(attrs={'class': 'custom-file-input'}),
             'footage': forms.FileInput(attrs={'class': 'custom-file-input'}),

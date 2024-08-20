@@ -210,6 +210,7 @@ class Turnstile_S(models.Model):
     turnstile_id = models.IntegerField(unique=True)
     location = models.CharField(max_length=100)
     safety_confirmation = models.BooleanField(default=False)
+    unlock = models.BooleanField(default=False)
     site = models.ForeignKey('Site', on_delete=models.CASCADE)
 
     def __str__(self):
@@ -253,3 +254,28 @@ class OnSiteUser(models.Model):
     
 
 
+class UpdateStatus(models.Model):
+    last_update = models.DateTimeField(default=timezone.now)
+    dataset_updated = models.BooleanField(default=False)
+
+    @classmethod
+    def get_or_create_status(cls):
+        status, created = cls.objects.get_or_create(pk=1)
+        return status
+    
+    
+    
+from django.db import models
+import os
+from django.conf import settings
+
+class FolderState(models.Model):
+    folder_name = models.CharField(max_length=255)
+    file_name = models.CharField(max_length=255)
+    modification_time = models.DateTimeField()
+
+    class Meta:
+        unique_together = ('folder_name', 'file_name')
+
+    def __str__(self):
+        return f"{self.folder_name}/{self.file_name}"

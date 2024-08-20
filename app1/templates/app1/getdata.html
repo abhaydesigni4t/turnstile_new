@@ -497,8 +497,8 @@
         padding-right: 30px; /* Adjust spacing to make room for the icon */
     }
     
-    th::after {
-        content: "";
+    th.sortable::after {
+        content: "\f0dc"; /* Default to FontAwesome sort icon */
         position: absolute;
         right: 5px; /* Distance from the right edge */
         top: 50%;
@@ -508,13 +508,14 @@
         color: #333; /* Adjust color to match your theme */
     }
     
-    th.asc::after {
+    th.sortable.asc::after {
         content: "\f0de"; /* FontAwesome sort up */
     }
     
-    th.desc::after {
+    th.sortable.desc::after {
         content: "\f0dd"; /* FontAwesome sort down */
     }
+    
 
     .dropdownl {
         position: relative;
@@ -669,28 +670,30 @@
 
     <div id="table-container">
 
-        <div class="filter-container">
-            <label for="filterName">Name:</label>
-            <input type="text" id="filterName" name="filterName" value="{{ request.GET.filterName|default_if_none:'' }}">
+        <form id="filterForm">
+            <div class="filter-container">
+                <label for="filterName">Name:</label>
+                <input type="text" id="filterName" name="filterName" value="{{ filterName|default_if_none:'' }}">
         
-            <label for="filterCompanyName">Company Name:</label>
-            <input type="text" id="filterCompanyName" name="filterCompanyName" value="{{ request.GET.filterCompanyName|default_if_none:'' }}">
+                <label for="filterCompanyName">Company Name:</label>
+                <input type="text" id="filterCompanyName" name="filterCompanyName" value="{{ filterCompanyName|default_if_none:'' }}">
         
-            <label for="filterJobRole">Job Role:</label>
-            <input type="text" id="filterJobRole" name="filterJobRole" value="{{ request.GET.filterJobRole|default_if_none:'' }}">
+                <label for="filterJobRole">Job Role:</label>
+                <input type="text" id="filterJobRole" name="filterJobRole" value="{{ filterJobRole|default_if_none:'' }}">
         
-            <label for="filterJobLocation">Job Location:</label>
-            <input type="text" id="filterJobLocation" name="filterJobLocation" value="{{ request.GET.filterJobLocation|default_if_none:'' }}">
+                <label for="filterJobLocation">Job Location:</label>
+                <input type="text" id="filterJobLocation" name="filterJobLocation" value="{{ filterJobLocation|default_if_none:'' }}">
         
-            <label for="filterStatus">Status:</label>
-            <select id="filterStatus" name="filterStatus">
-                <option value="">All</option>
-                <option value="active" {% if request.GET.filterStatus == 'active' %}selected{% endif %}>Active</option>
-                <option value="inactive" {% if request.GET.filterStatus == 'inactive' %}selected{% endif %}>Inactive</option>
-                <option value="pending" {% if request.GET.filterStatus == 'pending' %}selected{% endif %}>Pending</option>
-            </select>
-        </div>
-
+                <label for="filterStatus">Status:</label>
+                <select id="filterStatus" name="filterStatus">
+                    <option value="">All</option>
+                    <option value="active" {% if filterStatus == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if filterStatus == 'inactive' %}selected{% endif %}>Inactive</option>
+                    <option value="pending" {% if filterStatus == 'pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </div>
+        </form>
+        
         <form method="post" action="{% url 'delete_selected2' %}">
             {% csrf_token %}
         <table id="customers">
@@ -709,7 +712,7 @@
             <th>Facial Data</th>
             <th>SST</th>
             <th class="sortable">Expiry Data</th>
-            <th class="sortable">Status</th>
+            <th>Status</th>
             <th>Action</th>
             </tr>
 
@@ -807,20 +810,21 @@
         <div class="pagination">
             <span class="step-links">
                 {% if page_obj.has_previous %}
-                    <a href="?page=1">&laquo; first</a>
-                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                    <a href="?page=1{% if filterName %}&filterName={{ filterName }}{% endif %}{% if filterCompanyName %}&filterCompanyName={{ filterCompanyName }}{% endif %}{% if filterJobRole %}&filterJobRole={{ filterJobRole }}{% endif %}{% if filterJobLocation %}&filterJobLocation={{ filterJobLocation }}{% endif %}{% if filterStatus %}&filterStatus={{ filterStatus }}{% endif %}">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if filterName %}&filterName={{ filterName }}{% endif %}{% if filterCompanyName %}&filterCompanyName={{ filterCompanyName }}{% endif %}{% if filterJobRole %}&filterJobRole={{ filterJobRole }}{% endif %}{% if filterJobLocation %}&filterJobLocation={{ filterJobLocation }}{% endif %}{% if filterStatus %}&filterStatus={{ filterStatus }}{% endif %}">previous</a>
                 {% endif %}
         
                 <span class="current">
-                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
                 </span>
         
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">next</a>
-                    <a href="?page={{ paginator.num_pages }}">last &raquo;</a>
+                    <a href="?page={{ page_obj.next_page_number }}{% if filterName %}&filterName={{ filterName }}{% endif %}{% if filterCompanyName %}&filterCompanyName={{ filterCompanyName }}{% endif %}{% if filterJobRole %}&filterJobRole={{ filterJobRole }}{% endif %}{% if filterJobLocation %}&filterJobLocation={{ filterJobLocation }}{% endif %}{% if filterStatus %}&filterStatus={{ filterStatus }}{% endif %}">next</a>
+                    <a href="?page={{ paginator.num_pages }}{% if filterName %}&filterName={{ filterName }}{% endif %}{% if filterCompanyName %}&filterCompanyName={{ filterCompanyName }}{% endif %}{% if filterJobRole %}&filterJobRole={{ filterJobRole }}{% endif %}{% if filterJobLocation %}&filterJobLocation={{ filterJobLocation }}{% endif %}{% if filterStatus %}&filterStatus={{ filterStatus }}{% endif %}">last &raquo;</a>
                 {% endif %}
             </span>
         </div>
+        
     </div>
 
     <script>
@@ -848,91 +852,103 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        function sortTable(n, ascending) {
-            const table = document.getElementById("customers");
-            let rows, switching, i, x, y, shouldSwitch, dir;
-            dir = ascending ? "asc" : "desc"; 
-            switching = true;
+    function sortTable(n, ascending) {
+        const table = document.getElementById("customers");
+        let rows, switching, i, x, y, shouldSwitch, dir;
+        dir = ascending ? "asc" : "desc"; 
+        switching = true;
     
-            while (switching) {
-                switching = false;
-                rows = table.rows;
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            
+            for (i = 1; i < (rows.length - 1); i++) {
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+                let xValue = x.textContent || x.innerText;
+                let yValue = y.textContent || y.innerText;
                 
-                for (i = 1; i < (rows.length - 1); i++) {
-                    x = rows[i].getElementsByTagName("TD")[n];
-                    y = rows[i + 1].getElementsByTagName("TD")[n];
-                    let xValue = x.textContent || x.innerText;
-                    let yValue = y.textContent || y.innerText;
-    
-                    if (dir === "asc" && xValue > yValue) {
-                        shouldSwitch = true;
-                        break;
-                    } else if (dir === "desc" && xValue < yValue) {
-                        shouldSwitch = true;
-                        break;
-                    }
+                // Convert to integers if possible
+                let xNum = parseFloat(xValue);
+                let yNum = parseFloat(yValue);
+
+                if (!isNaN(xNum) && !isNaN(yNum)) {
+                    xValue = xNum;
+                    yValue = yNum;
                 }
     
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
+                if (dir === "asc" && xValue > yValue) {
+                    shouldSwitch = true;
+                    break;
+                } else if (dir === "desc" && xValue < yValue) {
+                    shouldSwitch = true;
+                    break;
                 }
             }
-        }
     
-        // Add click event listeners for table headers
-        const headers = document.querySelectorAll("#customers th");
-        headers.forEach((header, index) => {
-            header.addEventListener("click", () => {
-                const isAscending = header.classList.contains("asc");
-                sortTable(index, !isAscending);
-                headers.forEach(h => h.classList.remove("asc", "desc"));
-                header.classList.add(isAscending ? "desc" : "asc");
-            });
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+            }
+        }
+    }
+
+    // Add click event listeners for table headers
+    const headers = document.querySelectorAll("#customers th");
+    headers.forEach((header, index) => {
+        header.addEventListener("click", () => {
+            const isAscending = header.classList.contains("asc");
+            sortTable(index, !isAscending);
+            headers.forEach(h => h.classList.remove("asc", "desc"));
+            header.classList.add(isAscending ? "desc" : "asc");
         });
     });
+
+    // Set the default sorting order for the first column
+    headers[0].classList.add("asc"); // Default to ascending order for the first column
+});
+
     </script>
     
     
     <script>
-        // This function will be used to filter the data
-        function filterData() {
-            var filterName = document.getElementById('filterName').value.toLowerCase();
-            var filterCompanyName = document.getElementById('filterCompanyName').value.toLowerCase();
-            var filterJobRole = document.getElementById('filterJobRole').value.toLowerCase();
-            var filterJobLocation = document.getElementById('filterJobLocation').value.toLowerCase();
-            var filterStatus = document.getElementById('filterStatus').value.toLowerCase();
-    
-            var dataTable = document.getElementById('customers'); // Make sure the ID matches the table ID in your HTML
-            var rows = dataTable.getElementsByTagName('tr');
-    
-            for (var i = 1; i < rows.length; i++) { // Start from 1 to skip the header row
-                // Adjust the indices to match the correct columns in your HTML table
-                var name = rows[i].getElementsByTagName('td')[3].textContent || rows[i].getElementsByTagName('td')[3].innerText;
-                var companyName = rows[i].getElementsByTagName('td')[4].textContent || rows[i].getElementsByTagName('td')[4].innerText;
-                var jobRole = rows[i].getElementsByTagName('td')[5].textContent || rows[i].getElementsByTagName('td')[5].innerText;
-                var jobLocation = rows[i].getElementsByTagName('td')[8].textContent || rows[i].getElementsByTagName('td')[8].innerText;
-                var status = rows[i].getElementsByTagName('td')[14].textContent || rows[i].getElementsByTagName('td')[14].innerText;
-    
-                if (name.toLowerCase().indexOf(filterName) !== -1 &&
-                    companyName.toLowerCase().indexOf(filterCompanyName) !== -1 &&
-                    jobRole.toLowerCase().indexOf(filterJobRole) !== -1 &&
-                    jobLocation.toLowerCase().indexOf(filterJobLocation) !== -1 &&
-                    (filterStatus === '' || status.toLowerCase().indexOf(filterStatus) !== -1)) {
-                    rows[i].style.display = '';
-                } else {
-                    rows[i].style.display = 'none';
-                }
-            }
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
         }
     
-        // Add event listeners to the filter inputs
-        document.getElementById('filterName').addEventListener('keyup', filterData);
-        document.getElementById('filterCompanyName').addEventListener('keyup', filterData);
-        document.getElementById('filterJobRole').addEventListener('keyup', filterData);
-        document.getElementById('filterJobLocation').addEventListener('keyup', filterData);
-        document.getElementById('filterStatus').addEventListener('change', filterData);
+        function applyFilters() {
+            var filterName = encodeURIComponent(document.getElementById('filterName').value.trim());
+            var filterCompanyName = encodeURIComponent(document.getElementById('filterCompanyName').value.trim());
+            var filterJobRole = encodeURIComponent(document.getElementById('filterJobRole').value.trim());
+            var filterJobLocation = encodeURIComponent(document.getElementById('filterJobLocation').value.trim());
+            var filterStatus = encodeURIComponent(document.getElementById('filterStatus').value.trim());
+    
+            var url = new URL(window.location.href);
+            url.searchParams.set('filterName', filterName);
+            url.searchParams.set('filterCompanyName', filterCompanyName);
+            url.searchParams.set('filterJobRole', filterJobRole);
+            url.searchParams.set('filterJobLocation', filterJobLocation);
+            url.searchParams.set('filterStatus', filterStatus);
+            url.searchParams.set('page', 1);  // Reset to the first page
+    
+            window.location.href = url.toString(); // Reload the page
+        }
+    
+        var debouncedApplyFilters = debounce(applyFilters, 1500);
+    
+        document.getElementById('filterName').addEventListener('input', debouncedApplyFilters);
+        document.getElementById('filterCompanyName').addEventListener('input', debouncedApplyFilters);
+        document.getElementById('filterJobRole').addEventListener('input', debouncedApplyFilters);
+        document.getElementById('filterJobLocation').addEventListener('input', debouncedApplyFilters);
+        document.getElementById('filterStatus').addEventListener('change', debouncedApplyFilters);
     </script>
+    
+    
+    
 </body>
 
 </html>

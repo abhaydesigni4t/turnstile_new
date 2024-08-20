@@ -626,6 +626,7 @@
                             <th>Turnstile ID</th>
                             <th>Location</th>
                             <th>Safety Confirmation</th>  
+                            <th>Unlock</th>
                             <th>Action</th>   
                         </tr>
                     </thead>
@@ -638,6 +639,9 @@
                             <td>{{ turnstile.location }}</td>
                             <td class="switch-icon">
                                 <i class="fas {% if turnstile.safety_confirmation %}fa-toggle-on{% else %}fa-toggle-off{% endif %}" id="switch_{{ turnstile.pk }}" data-pk="{{ turnstile.pk }}" onclick="toggleSafetyConfirmation(this)"></i>
+                            </td>
+                            <td class="switch-icon">
+                                <i class="fas {% if turnstile.unlock %}fa-toggle-on{% else %}fa-toggle-off{% endif %}" id="switch_{{ turnstile.pk }}" data-pk="{{ turnstile.pk }}" onclick="toggleSafetyConfirmation(this)"></i>
                             </td>
                             <td>
                                 <div class="dropdownb">

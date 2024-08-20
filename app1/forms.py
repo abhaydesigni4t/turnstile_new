@@ -105,7 +105,7 @@ class timescheduleForm(forms.ModelForm):
 class TurnstileForm(forms.ModelForm):
     class Meta:
         model = Turnstile_S
-        fields = ['turnstile_id','location','safety_confirmation','site']
+        fields = ['turnstile_id','location','safety_confirmation','unlock','site']
 
 class OrientationForm(forms.ModelForm):
     class Meta:

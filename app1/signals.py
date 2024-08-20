@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_save, pre_delete,post_delete
 from django.dispatch import receiver
 from django.core.cache import cache
 from datetime import datetime
@@ -41,3 +41,21 @@ def create_user_folder(sender, instance, created, **kwargs):
         else:
             instance.picture = None  # No image found, set picture to None or another default value
             instance.save()
+            
+
+from .models import UpdateStatus
+from django.utils import timezone
+   
+@receiver(post_save, sender=UserEnrolled)
+def update_status_on_save(sender, instance, **kwargs):
+    status = UpdateStatus.get_or_create_status()
+    status.last_update = timezone.now()
+    status.dataset_updated = True
+    status.save()
+
+@receiver(post_delete, sender=UserEnrolled)
+def update_status_on_delete(sender, instance, **kwargs):
+    status = UpdateStatus.get_or_create_status()
+    status.last_update = timezone.now()
+    status.dataset_updated = True
+    status.save()

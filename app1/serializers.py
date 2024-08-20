@@ -550,3 +550,16 @@ class UserEnrolledSerializer_update(serializers.ModelSerializer):
     
 
 
+from rest_framework import serializers
+from .models import Turnstile_S
+
+class TurnstileUnlockSerializer(serializers.ModelSerializer):
+    unlock = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Turnstile_S
+        fields = ['turnstile_id', 'unlock']
+
+    def get_unlock(self, obj):
+        """Convert the boolean field to 0 or 1."""
+        return 1 if obj.unlock else 0

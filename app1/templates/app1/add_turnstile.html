@@ -592,6 +592,11 @@
                     <span class="checkmark"></span>
                 </label>
                 
+                <label class="checkbox-container" for="{{ form.unlock.id_for_label }}">Unlock:
+                    <input type="checkbox" class="check" id="{{ form.unlock.id_for_label }}" name="{{ form.unlock.name }}"
+                           {% if form.instance.unlock %} checked {% endif %}>
+                    <span class="checkmark"></span>
+                </label>
 
                 <button type="submit">Save</button>
             </form>

@@ -146,7 +146,8 @@ def report_view(request):
     except Exception as e:
         return render(request, 'app1/error.html', {'error_message': str(e), 'site_name': site_name})
 
-
+from django.db.models import IntegerField
+from django.db.models.functions import Cast
 
 class get_data(ListView):
     model = UserEnrolled
@@ -158,10 +159,33 @@ class get_data(ListView):
         queryset = UserEnrolled.objects.all()
         site_name = self.request.GET.get('site_name') or self.request.session.get('site_name')
 
-        # Filter by site name if provided
         if site_name:
             queryset = queryset.filter(site__name=site_name)
+
+        filter_name = self.request.GET.get('filterName', '')
+        filter_company_name = self.request.GET.get('filterCompanyName', '')
+        filter_job_role = self.request.GET.get('filterJobRole', '')
+        filter_job_location = self.request.GET.get('filterJobLocation', '')
+        filter_status = self.request.GET.get('filterStatus', '')
+
+        if filter_name:
+            queryset = queryset.filter(name__icontains=filter_name)
+        if filter_company_name:
+            queryset = queryset.filter(company_name__icontains=filter_company_name)
+        if filter_job_role:
+            queryset = queryset.filter(job_role__icontains=filter_job_role)
+        if filter_job_location:
+            queryset = queryset.filter(job_location__icontains=filter_job_location)
+        if filter_status:
+            queryset = queryset.filter(status=filter_status)
             
+        sort_by = self.request.GET.get('sort_by')
+        if sort_by:
+            if sort_by == 'mycompany_id':
+                queryset = queryset.order_by(Cast('mycompany_id', output_field=IntegerField()))
+            elif sort_by == 'tag_id':
+                queryset = queryset.order_by(Cast('tag_id', output_field=IntegerField()))
+
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -171,19 +195,25 @@ class get_data(ListView):
             self.request.session['site_name'] = site_name  # Save site_name to session
         context['site_name'] = site_name
 
-        page = self.request.GET.get('page')
+        context['filterName'] = self.request.GET.get('filterName', '')
+        context['filterCompanyName'] = self.request.GET.get('filterCompanyName', '')
+        context['filterJobRole'] = self.request.GET.get('filterJobRole', '')
+        context['filterJobLocation'] = self.request.GET.get('filterJobLocation', '')
+        context['filterStatus'] = self.request.GET.get('filterStatus', '')
+
         paginator = Paginator(self.get_queryset(), self.paginate_by)
+        page = self.request.GET.get('page')
         page_obj = paginator.get_page(page)
-        offset = self.paginate_by * (page_obj.number - 1)
-        context['offset'] = offset
         context['page_obj'] = page_obj
         context['paginator'] = paginator
-        
-        context['data'] = list(enumerate(page_obj.object_list, start=offset + 1))
+
+        context['data'] = list(enumerate(page_obj.object_list, start=(page_obj.number - 1) * self.paginate_by + 1))
         sites = Site.objects.all()
         site_names = [(site.name, site.name) for site in sites]
         context['site_names'] = site_names
         return context
+
+
 
     
 class create_data(CreateView):
@@ -2318,4 +2348,60 @@ class UserEnrolledUpdateAPIView_n(generics.UpdateAPIView):
         
 
 
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .models import Turnstile_S
+from .serializers import TurnstileUnlockSerializer
 
+@api_view(['POST'])
+def turnstile_status(request):
+    # Extract turnstile_id from form data
+    turnstile_id = request.data.get('turnstile_id')
+
+    if not turnstile_id:
+        return Response({'error': 'turnstile_id form data is required'}, status=400)
+
+    try:
+        # Ensure turnstile_id is an integer
+        turnstile_id = int(turnstile_id)
+        turnstile = Turnstile_S.objects.get(turnstile_id=turnstile_id)
+    except ValueError:
+        return Response({'error': 'Invalid turnstile_id format'}, status=400)
+    except Turnstile_S.DoesNotExist:
+        return Response({'error': 'Turnstile not found'}, status=404)
+
+    serializer = TurnstileUnlockSerializer(turnstile)
+    return Response(serializer.data)
+
+
+
+from .models import UpdateStatus
+
+class DatasetUpdateStatusView(APIView):
+    def get(self, request, *args, **kwargs):
+        status = UpdateStatus.get_or_create_status()
+        if status.dataset_updated:
+            # Return 1 and reset the flag
+            status.dataset_updated = False
+            status.save()
+            return Response({'datasetUpdate': 1})
+        else:
+            return Response({'datasetUpdate': 0})
+        
+        
+    
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .utils import update_folder_states  # Assuming the utility function is in utils.py
+
+class DetectChangesView(APIView):
+    def get(self, request):
+        # Check for changes
+        changes_detected = update_folder_states()
+        
+        if changes_detected:
+            return Response({'datasetUpdate': 1}, status=status.HTTP_200_OK)
+        else:
+            return Response({'datasetUpdate': 0}, status=status.HTTP_200_OK)

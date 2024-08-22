@@ -42,20 +42,16 @@
             display: inline-block;
             margin-right: 2px;
             transition: color 0.3s ease;
+           
         }
     
         .nav {
             display: flex;
             align-items: center;
-            margin-right: 100px;
+            margin-right: auto; /* Adjusted to auto to prevent fixed margin on right */
+            margin-left:315px;
         }
-    
-        .logo img {
-            max-height: 35px;
-            margin-left: 15px;
-            float: left;
-            border-radius: 20px;
-        }
+        
     
         .dropdown {
             display: inline-block;
@@ -390,7 +386,7 @@
 
 <body>
     <header>
-        <a class="logo" href="#"><img src="{% static 'app1/images/logo.jpg' %}" alt="Logo"></a>
+       
 
         <nav class="nav">
             <a href="{% url 'get_all' %}"><i class="fas fa-user-friends"></i>User Management</a>

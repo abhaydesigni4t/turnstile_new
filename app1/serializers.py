@@ -225,12 +225,42 @@ from rest_framework import serializers
 from .models import OnSiteUser
 
 
+# class OnSiteUserSerializer(serializers.ModelSerializer):
+#     site = serializers.CharField(required=False)
+
+#     class Meta:
+#         model = OnSiteUser
+#         fields = ['name', 'tag_id', 'status', 'site']
+
+#     def to_internal_value(self, data):
+#         # Convert site name to Site instance
+#         internal_data = super().to_internal_value(data)
+#         site_name = data.get('site')
+
+#         if site_name:
+#             try:
+#                 site = Site.objects.get(name=site_name)
+#                 internal_data['site'] = site
+#             except Site.DoesNotExist:
+#                 raise serializers.ValidationError({'site': 'Site with the provided name does not exist.'})
+#         else:
+#             internal_data['site'] = None
+        
+#         return internal_data
+
+#     def to_representation(self, instance):
+#         # Convert Site instance to site name for the response
+#         representation = super().to_representation(instance)
+#         representation['site'] = instance.site.name if instance.site else None
+#         return representation
+
 class OnSiteUserSerializer(serializers.ModelSerializer):
     site = serializers.CharField(required=False)
+    face = serializers.BooleanField(required=True)  # Include the face field in the serializer
 
     class Meta:
         model = OnSiteUser
-        fields = ['name', 'tag_id', 'status', 'site']
+        fields = ['name', 'tag_id', 'status', 'site', 'face']  # Add face to the fields list
 
     def to_internal_value(self, data):
         # Convert site name to Site instance
@@ -252,7 +282,10 @@ class OnSiteUserSerializer(serializers.ModelSerializer):
         # Convert Site instance to site name for the response
         representation = super().to_representation(instance)
         representation['site'] = instance.site.name if instance.site else None
+        representation['face'] = 1 if instance.face else 0  # Convert boolean to 0 or 1
         return representation
+
+
         
     
 '''    
@@ -283,11 +316,18 @@ class OnsiteGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OnSiteUser
-        fields = ['name', 'tag_id', 'status', 'timestamp', 'site']
+        fields = ['name', 'tag_id', 'status', 'face', 'timestamp', 'site']
 
     def get_site(self, obj):
         # Return the site name instead of the primary key
         return obj.site.name if obj.site else None
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Convert the boolean face field to 1 or 0
+        representation['face'] = 1 if instance.face else 0
+        return representation
+
 
 
 class PostSiteSerializer(serializers.ModelSerializer):

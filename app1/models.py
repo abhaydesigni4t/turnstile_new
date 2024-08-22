@@ -247,6 +247,7 @@ class OnSiteUser(models.Model):
     ])
     timestamp = models.DateTimeField(auto_now=True) 
     site = models.ForeignKey('Site', on_delete=models.CASCADE)
+    face = models.BooleanField(default=False)  # Field to store 1 (True) or 0 (False)
     
     def __str__(self):
         return self.name

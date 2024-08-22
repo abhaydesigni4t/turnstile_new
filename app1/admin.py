@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserEnrolled,CustomUser,Notification,Upload_data,Asset,check_changes,Site,company,timeschedule,Upload_File,Turnstile_S,Orientation,PreShift,ToolBox,OnSiteUser
+from .models import UserEnrolled,CustomUser,Notification,Upload_data,Asset,check_changes,Site,company,timeschedule,Upload_File,Turnstile_S,Orientation,PreShift,ToolBox,OnSiteUser,FolderState
 
 admin.site.register(CustomUser)
 admin.site.register(UserEnrolled)
@@ -16,3 +16,4 @@ admin.site.register(Orientation)
 admin.site.register(PreShift)
 admin.site.register(ToolBox)
 admin.site.register(OnSiteUser)
+admin.site.register(FolderState)

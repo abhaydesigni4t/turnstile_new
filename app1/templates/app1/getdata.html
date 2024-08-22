@@ -93,15 +93,10 @@
         .nav {
             display: flex;
             align-items: center;
-            margin-right: 100px;
+            margin-right: auto; /* Adjusted to auto to prevent fixed margin on right */
+            margin-left:315px;
         }
     
-        .logo img {
-            max-height: 35px;
-            margin-left: 15px;
-            float: left;
-            border-radius: 20px;
-        }
     
         .dropdown {
             display: inline-block;
@@ -587,14 +582,62 @@
         font-size:10px;
     }
     
+
+    @media (max-width: 768px) {
+        .header .nav {
+            display: none;
+        }
+
+        .hidden-desktop {
+            display: block;
+            position: absolute;
+            top: 15px;
+            left: 15px; /* Changed from right to left */
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .sidebar {
+            width: 200px;
+            transform: translateX(-250px); /* Hidden by default */
+        }
+
+        .sidebar.active {
+            transform: translateX(0); /* Show sidebar */
+        }
+
+        #table-container {
+            margin-left: 0;
+            padding: 15px;
+            background-color: #ffffff;
+            width:1330px;
+        }
+
+        .logo img {
+            max-height: 40px;
+        }
+
+        .user {
+            margin-top: 70px;
+            margin-left:-240px;
+        }
+
+        .nav {
+            margin-right: auto; /* Adjusted to auto to prevent fixed margin on right */
+            margin-left:65px;
+        }
+
+    }
+
+    
     </style>
 </head>
 
 <body>
     <header>
-        <a class="logo" href="#"><img src="{% static 'app1/images/logo.jpg' %}" alt="Logo"></a>
-
-      
+        <div class="hidden-desktop" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </div>
         <nav class="nav">
             <a href="{% url 'get_all' %}"><i class="fas fa-user-friends"></i>User Management</a>
             <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-database"></i> Asset Management</a>
@@ -849,67 +892,84 @@
         }
 </script>
      
+<script>
+    function toggleSidebar() {
+        var sidebar = document.querySelector('.sidebar');
+        sidebar.classList.toggle('active');
+    }
+
+    document.addEventListener('click', function(event) {
+        var sidebar = document.querySelector('.sidebar');
+        var hamburgerIcon = document.querySelector('.hidden-desktop');
+        
+        if (!sidebar.contains(event.target) && !hamburgerIcon.contains(event.target)) {
+            sidebar.classList.remove('active');
+        }
+    });
+</script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-    function sortTable(n, ascending) {
-        const table = document.getElementById("customers");
-        let rows, switching, i, x, y, shouldSwitch, dir;
-        dir = ascending ? "asc" : "desc"; 
-        switching = true;
-    
-        while (switching) {
-            switching = false;
-            rows = table.rows;
-            
-            for (i = 1; i < (rows.length - 1); i++) {
-                x = rows[i].getElementsByTagName("TD")[n];
-                y = rows[i + 1].getElementsByTagName("TD")[n];
-                let xValue = x.textContent || x.innerText;
-                let yValue = y.textContent || y.innerText;
+        function sortTable(n, ascending) {
+            const table = document.getElementById("customers");
+            let rows, switching, i, x, y, shouldSwitch, dir;
+            dir = ascending ? "asc" : "desc"; 
+            switching = true;
+        
+            while (switching) {
+                switching = false;
+                rows = table.rows;
                 
-                // Convert to integers if possible
-                let xNum = parseFloat(xValue);
-                let yNum = parseFloat(yValue);
+                for (i = 1; i < (rows.length - 1); i++) {
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    let xValue = x.textContent || x.innerText;
+                    let yValue = y.textContent || y.innerText;
+                    
+                    // Convert to integers if possible
+                    let xNum = parseFloat(xValue);
+                    let yNum = parseFloat(yValue);
 
-                if (!isNaN(xNum) && !isNaN(yNum)) {
-                    xValue = xNum;
-                    yValue = yNum;
+                    if (!isNaN(xNum) && !isNaN(yNum)) {
+                        xValue = xNum;
+                        yValue = yNum;
+                    } else {
+                        xValue = xValue.toLowerCase();
+                        yValue = yValue.toLowerCase();
+                    }
+
+                    if (dir === "asc" && xValue > yValue) {
+                        shouldSwitch = true;
+                        break;
+                    } else if (dir === "desc" && xValue < yValue) {
+                        shouldSwitch = true;
+                        break;
+                    }
                 }
-    
-                if (dir === "asc" && xValue > yValue) {
-                    shouldSwitch = true;
-                    break;
-                } else if (dir === "desc" && xValue < yValue) {
-                    shouldSwitch = true;
-                    break;
+        
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
                 }
-            }
-    
-            if (shouldSwitch) {
-                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                switching = true;
             }
         }
-    }
 
-    // Add click event listeners for table headers
-    const headers = document.querySelectorAll("#customers th");
-    headers.forEach((header, index) => {
-        header.addEventListener("click", () => {
-            const isAscending = header.classList.contains("asc");
-            sortTable(index, !isAscending);
-            headers.forEach(h => h.classList.remove("asc", "desc"));
-            header.classList.add(isAscending ? "desc" : "asc");
+        // Add click event listeners for table headers
+        const headers = document.querySelectorAll("#customers th");
+        headers.forEach((header, index) => {
+            header.addEventListener("click", () => {
+                const isAscending = header.classList.contains("asc");
+                sortTable(index, !isAscending);
+                headers.forEach(h => h.classList.remove("asc", "desc"));
+                header.classList.add(isAscending ? "desc" : "asc");
+            });
         });
+
+        // Set the default sorting order for the first column
+        headers[0].classList.add("asc"); // Default to ascending order for the first column
     });
+</script>
 
-    // Set the default sorting order for the first column
-    headers[0].classList.add("asc"); // Default to ascending order for the first column
-});
-
-    </script>
-    
     
     <script>
         function debounce(func, wait) {

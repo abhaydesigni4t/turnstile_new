@@ -185,6 +185,10 @@ class get_data(ListView):
                 queryset = queryset.order_by(Cast('mycompany_id', output_field=IntegerField()))
             elif sort_by == 'tag_id':
                 queryset = queryset.order_by(Cast('tag_id', output_field=IntegerField()))
+            elif sort_by == 'job_role':
+                queryset = queryset.order_by('job_role')  # Sorting alphabetically
+            elif sort_by == 'job_location':
+                queryset = queryset.order_by('job_location')
 
         return queryset
 
@@ -1512,9 +1516,18 @@ def onsite_user(request):
     page_number = request.GET.get('page')
     on_site_users = paginator.get_page(page_number)
 
+    # Convert face field from boolean to 0/1 before passing to template
+    for user in on_site_users:
+        user.face = 1 if user.face else 0
+
     sites = Site.objects.all()  # Get all sites to display in the template
     site_names = [(site.name, site.name) for site in sites]
-    return render(request, 'app1/onsite_user.html', {'on_site_users': on_site_users, 'sites': sites, 'site_name': site_name,'site_names':site_names})
+    return render(request, 'app1/onsite_user.html', {
+        'on_site_users': on_site_users,
+        'sites': sites,
+        'site_name': site_name,
+        'site_names': site_names
+    })
 
 def delete_selected5(request):
     if request.method == 'POST':
@@ -1533,6 +1546,26 @@ from .models import OnSiteUser
 from .serializers import OnSiteUserSerializer
 
 
+# class OnSiteUserCreateAPIView(APIView):
+#     def post(self, request):
+#         serializer = OnSiteUserSerializer(data=request.data)
+#         if serializer.is_valid():
+#             site = serializer.validated_data.get('site')
+
+#             # If site is None (not provided), default to the first site
+#             if site is None:
+#                 site = Site.objects.first()
+#                 if site is None:
+#                     return Response({"error": "No sites available."}, status=status.HTTP_400_BAD_REQUEST)
+#                 # Update the validated_data with the default site
+#                 serializer.validated_data['site'] = site
+
+#             # Save the OnSiteUser instance with the site
+#             serializer.save(site=site)
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         else:
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class OnSiteUserCreateAPIView(APIView):
     def post(self, request):
         serializer = OnSiteUserSerializer(data=request.data)
@@ -1547,8 +1580,8 @@ class OnSiteUserCreateAPIView(APIView):
                 # Update the validated_data with the default site
                 serializer.validated_data['site'] = site
 
-            # Save the OnSiteUser instance with the site
-            serializer.save(site=site)
+            # Save the OnSiteUser instance with the site and face fields
+            serializer.save(site=site, face=serializer.validated_data['face'])
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -2405,3 +2438,81 @@ class DetectChangesView(APIView):
             return Response({'datasetUpdate': 1}, status=status.HTTP_200_OK)
         else:
             return Response({'datasetUpdate': 0}, status=status.HTTP_200_OK)
+
+
+from .models import Notification, Turnstile_S
+import time
+
+
+class FaceVerificationAndRelayAPI(APIView):
+
+    def post(self, request, *args, **kwargs):
+        facial_data = request.data.get('facial_data')
+        turnstile_id = request.data.get('turnstile_id')
+        user_folder_name = request.data.get('user_folder_name')  # Assuming the user's folder name is provided
+
+        if not facial_data or not turnstile_id or not user_folder_name:
+            return Response({"error": "Facial data, Turnstile ID, and User folder name are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Process the uploaded facial image
+        uploaded_image = face_recognition.load_image_file(facial_data)
+        uploaded_encoding = face_recognition.face_encodings(uploaded_image)
+
+        if len(uploaded_encoding) == 0:
+            return Response({"error": "No face found in the uploaded image."}, status=status.HTTP_400_BAD_REQUEST)
+
+        uploaded_encoding = uploaded_encoding[0]
+
+        # Verify face using the stored encodings
+        face_matched = self.verify_face(user_folder_name, uploaded_encoding)
+
+        if not face_matched:
+            # Log notification
+            Notification.objects.create(
+                subject="Non-Matching Face Detected",
+                description=f"A non-matching face was detected and the relay was actuated.",
+                username="admin"
+            )
+
+            # Actuate relay
+            self.actuate_relay(turnstile_id)
+
+            return Response({"message": "Non-matching face detected. Relay actuated."}, status=status.HTTP_200_OK)
+
+        return Response({"message": "Face matched successfully."}, status=status.HTTP_200_OK)
+
+    def verify_face(self, user_folder_name, uploaded_encoding):
+        # Load encodings from the pickle file
+        user_folder = os.path.join('media', 'facial_data', user_folder_name)
+        pickle_file_path = os.path.join(user_folder, 'encodings.pickle')
+
+        if not os.path.exists(pickle_file_path):
+            return False
+
+        with open(pickle_file_path, 'rb') as f:
+            data = pickle.load(f)
+
+        known_encodings = data["encodings"]
+
+        # Compare the uploaded encoding with known encodings
+        matches = face_recognition.compare_faces(known_encodings, uploaded_encoding)
+
+        return any(matches)
+
+    def actuate_relay(self, turnstile_id):
+        try:
+            # Fetch the turnstile and set it to unlock (actuate the relay)
+            turnstile = Turnstile_S.objects.get(turnstile_id=turnstile_id)
+            turnstile.unlock = True
+            turnstile.save()
+
+            # Wait for 4 seconds
+            time.sleep(4)
+
+            # Reset the relay to locked (set unlock to False)
+            turnstile.unlock = False
+            turnstile.save()
+
+        except Turnstile_S.DoesNotExist:
+            # Handle the case where the turnstile does not exist
+            pass

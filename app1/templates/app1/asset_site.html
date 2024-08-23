@@ -660,7 +660,6 @@
         <div id="table-container">
             <table id="customers">
             <tr>
-                <th>Asset ID</th>
                 <th>Picture</th>
                 <th>Asset Name</th>
                 <th>Tag ID</th>
@@ -670,7 +669,6 @@
             </tr>
             {% for asset in assets %}
             <tr>
-                <td>{{ asset.asset_id }}</td>
                 <td>
                     {% if asset.picture %}
                     <img src="{{ asset.picture.url }}" alt="Asset" style="width: 50px; height: 50px; object-fit: cover;">
@@ -678,7 +676,7 @@
                     <img src="{% static 'app1/images/asset.jpg' %}" alt="Asset" style="width: 50px; height: 50px; object-fit: cover;">
                     {% endif %}
                 </td>
-                <td><a class="link" href="{% url 'update_asset' asset_id=asset.asset_id %}">{{ asset.asset_name }}</a></td>
+                <td><a class="link" href="{% url 'update_asset' id=asset.id %}">{{ asset.asset_name }}</a></td>
                 <td>{{ asset.tag_id }}</td>
                 
                 <td>{{ asset.status }}</td>
@@ -686,8 +684,8 @@
                     <div class="dropdownb">
                         <button class="btn-icon toggle-btn"><i class="fas fa-ellipsis-h"></i></button>
                         <div class="dropdown-contentb">
-                            <a href="{% url 'update_asset' asset_id=asset.asset_id %}" class="edit-btn">Edit</a>
-                            <a href="{% url 'delete_asset' asset_id=asset.asset_id %}" class="delete-btn">Delete</a>
+                            <a href="{% url 'update_asset' id=asset.id %}" class="edit-btn">Edit</a>
+                            <a href="{% url 'delete_asset' id=asset.id %}" class="delete-btn">Delete</a>
                         </div>
                     </div>
                 </td>   

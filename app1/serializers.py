@@ -17,7 +17,7 @@ class AssetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Asset
-        fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'footage', 'description', 'asset_category', 'status', 'location', 'time_log', 'site']
+        fields = [ 'picture', 'asset_name', 'tag_id', 'footage', 'description', 'status', 'location', 'time_log', 'site']
 
     def validate_site(self, value):
         try:
@@ -518,6 +518,30 @@ class LoginSerializerApp(serializers.Serializer):
 
         return data
     
+
+from rest_framework_simplejwt.tokens import RefreshToken
+
+class LoginSerializerApp1(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+
+        if not email or not password:
+            raise serializers.ValidationError("Both email and password are required.")
+
+        user = UserEnrolled.objects.filter(email=email, password=password).first()
+        if not user:
+            raise serializers.ValidationError("Invalid email or password.")
+
+        # Generate JWT token (if you want to do it here)
+        refresh = RefreshToken.for_user(user)
+        data['token'] = str(refresh.access_token)
+        data['refresh_token'] = str(refresh)
+
+        return data
 
 
 from django.contrib.auth import get_user_model

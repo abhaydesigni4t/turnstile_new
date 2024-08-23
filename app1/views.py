@@ -309,25 +309,25 @@ def add_asset(request):
     site_name = request.GET.get('site_name') or request.session.get('site_name')
     if site_name:
         request.session['site_name'] = site_name
-    
+
     if request.method == 'POST':
-        form = AssetForm(request.POST,request.FILES)
+        form = AssetForm(request.POST, request.FILES)
         if form.is_valid():
             try:
                 form.save()
                 return redirect('asset_site')
             except ValidationError as e:
-                form.add_error('asset_id', str(e))  
+                form.add_error(None, str(e))  # Removed asset_id reference
     else:
         form = AssetForm()
-    
+
     sites = Site.objects.all()  # Get all sites to display in the template
     site_names = [(site.name, site.name) for site in sites]
-    return render(request, 'app1/add_asset.html', {'form': form,'site_name':site_name,'site_names':site_names})
+    return render(request, 'app1/add_asset.html', {'form': form, 'site_name': site_name, 'site_names': site_names})
 
 
-def update_asset(request, asset_id):
-    asset = get_object_or_404(Asset, asset_id=asset_id)
+def update_asset(request, id):
+    asset = get_object_or_404(Asset, id=id)  # Use the default 'id' field instead of 'asset_id'
     
     site_name = request.GET.get('site_name') or request.session.get('site_name')
     if site_name:
@@ -340,16 +340,17 @@ def update_asset(request, asset_id):
                 form.save()
                 return redirect('asset_site')
             except ValidationError as e:
-                form.add_error('asset_id', str(e))
+                form.add_error(None, str(e))  # Removed 'asset_id' reference
     else:
         form = AssetForm(instance=asset)
     
     sites = Site.objects.all()  # Get all sites to display in the template
     site_names = [(site.name, site.name) for site in sites]
-    return render(request, 'app1/add_asset.html', {'form': form,'site_name':site_name,'site_names':site_names})
+    return render(request, 'app1/add_asset.html', {'form': form, 'site_name': site_name, 'site_names': site_names})
 
-def delete_asset(request, asset_id):
-    asset = get_object_or_404(Asset, asset_id=asset_id)
+
+def delete_asset(request, id):
+    asset = get_object_or_404(Asset, id=id)  # Use the default 'id' field instead of 'asset_id'
     
     if request.method == 'POST':
         asset.delete()
@@ -357,6 +358,7 @@ def delete_asset(request, asset_id):
         return redirect('asset_site')
     
     return render(request, 'app1/data_confirm_delete9.html', {'asset': asset})
+
 
 def asset_site(request):
     site_name = request.GET.get('site_name')
@@ -382,9 +384,10 @@ def asset_site(request):
     return render(request, 'app1/asset_site.html', {'assets': assets, 'sites': sites, 'site_name': site_name,'site_names':site_names})
 
 
-def asset_details(request, asset_id):
-    asset = get_object_or_404(Asset, asset_id=asset_id)
+def asset_details(request, id):
+    asset = get_object_or_404(Asset, id=id)  # Use the default 'id' field instead of 'asset_id'
     return render(request, 'app1/view_asset.html', {'asset': asset})
+
 
 class DownloadDatabaseView(APIView):
     def get(self, request, *args, **kwargs):  
@@ -2053,6 +2056,30 @@ class LoginAPIApp(APIView):
             user = UserEnrolled.objects.get(email=email)
             name = user.name
             return Response({'message': 'Login successful', 'name': name}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import LoginSerializerApp1
+class LoginAPIApp1(APIView):
+    def post(self, request, format=None):
+        serializer = LoginSerializerApp1(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            user = UserEnrolled.objects.get(email=email)
+            name = user.name
+            
+            # Generate JWT token
+            refresh = RefreshToken.for_user(user)
+            token = refresh.access_token
+            
+            response_data = {
+                'message': 'Login successful',
+                'name': name,
+                'access_token': str(token),
+                'refresh_token': str(refresh),
+            }
+            
+            return Response(response_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 

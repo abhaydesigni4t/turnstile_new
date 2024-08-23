@@ -126,13 +126,11 @@ class Site_management(models.Model):
     link_field = models.URLField(max_length=200) 
 
 class Asset(models.Model):
-    asset_id = models.IntegerField(unique=True)
     picture = models.ImageField(upload_to='asset_pictures/', blank=True, null=True)
     asset_name = models.CharField(max_length=255)
     tag_id = models.IntegerField()
     footage = models.ImageField(upload_to='assets_footage/', blank=True, null=True, verbose_name='Footage')
-    description = models.CharField(max_length=500)
-    asset_category = models.CharField(max_length=50)
+    description = models.CharField(max_length=500,blank=True, null=True)
     STATUS_CHOICES = [
         ('active', 'Active'),
         ('inactive', 'Inactive'),

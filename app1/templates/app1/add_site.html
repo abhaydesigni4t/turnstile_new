@@ -45,14 +45,24 @@
         .nav {
             display: flex;
             align-items: center;
-            margin-right: 85px;
+            margin-right: 0; /* Adjust as needed */
+            margin-left:520px;
+            margin-right:50px;
         }
     
-        .logo img {
-            max-height: 1px;
-            border-radius: 1px;
+        .custom-link a {
+            font-size: 18px;
+            text-decoration: none;
+            color: black;
+            font-weight: bold;
+            margin-right: 1px;
+            margin-left:310px;
         }
     
+        .logo {
+            visibility: hidden;
+        }
+
         .dropdown {
             display: inline-block;
             position: relative;
@@ -113,46 +123,7 @@
                 display: none;
             }
         
-            @media only screen and (max-width: 768px) {
-                .hidden-desktop {
-                    display: block;
-                }
-        
-                .nav {
-                    display: none;
-                    flex-direction: column;
-                    position: absolute;
-                    background-color: #ffffff;
-                    width: 40%;
-                    top: 70px;
-                    left: 0;
-                    padding: 10px;
-                }
-        
-                .nav.open {
-                    display: flex;
-                }
-        
-                .nav-toggle-label {
-                    display: block;
-                    padding: 10px;
-                    cursor: pointer;
-                }
-        
-                .nav-toggle-label span {
-                    display: block;
-                    width: 25px;
-                    height: 3px;
-                    background-color: white;
-                    margin: 5px;
-                }
-        
-                .edit-btn,
-                .delete-btn {
-                    display: block;
-                    margin-bottom: 5px;
-                }
-            }
+            
         
             .sidebar-logo {
                 text-align: center;
@@ -223,13 +194,6 @@
                 margin-right: 2px;
             }
         
-            .custom-link a {
-                font-size: 18px;
-                text-decoration: none;
-                color: black;
-                font-weight: bold;
-                margin-right: 170px;
-            }
         
         .content {
             flex-grow: 1;
@@ -388,11 +352,60 @@
             margin-right: 8px;
             font-size:10px;
         }
+
+        @media (max-width: 768px) {
+            .header .nav {
+                display: none;
+            }
+    
+            .hidden-desktop {
+                display: block;
+                position: absolute;
+                top: 15px;
+                left: 15px; /* Changed from right to left */
+                font-size: 24px;
+                cursor: pointer;
+            }
+    
+            .nav a {
+                visibility: hidden;
+            }
+
+            .custom-link a {
+                visibility: hidden;
+            }
+
+            .sidebar {
+                width: 200px;
+                transform: translateX(-250px); /* Hidden by default */
+            }
+    
+            .sidebar.active {
+                transform: translateX(0); /* Show sidebar */
+            }
+    
+            .content {
+                margin-left: 0;
+                padding: 15px;
+            }
+    
+            .logo img {
+                max-height: 40px;
+            }
+    
+            .user {
+                margin-top: 70px;
+            }
+        }
     </style>
 </head>
 <body>
     <header>
-        <a class="logo" href="#"><img src="{% static 'app1/images/logo.jpg' %}" alt="Logo"></a>
+
+        <div class="hidden-desktop" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </div>
+        
         <div class="custom-link">
         <a href="#"> Add Site </a>
         </div>
@@ -496,6 +509,22 @@
             var nav = document.querySelector('.nav');
             nav.classList.toggle('open');
         }
+    </script>
+
+    <script>
+        function toggleSidebar() {
+            var sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            var sidebar = document.querySelector('.sidebar');
+            var hamburgerIcon = document.querySelector('.hidden-desktop');
+            
+            if (!sidebar.contains(event.target) && !hamburgerIcon.contains(event.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
     </script>
 </body>
 

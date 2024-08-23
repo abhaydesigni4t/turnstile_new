@@ -63,6 +63,8 @@
             padding: 0;
             background: #f4f4f4;
             box-sizing: border-box;
+            {% comment %} min-height: 100vh; /* Full viewport height by default */ {% endcomment %}
+
         }
     
         header {
@@ -583,6 +585,7 @@
     }
     
 
+ 
     @media (max-width: 768px) {
         .header .nav {
             display: none;
@@ -627,6 +630,7 @@
             margin-left:65px;
         }
 
+
     }
 
     
@@ -635,9 +639,11 @@
 
 <body>
     <header>
+
         <div class="hidden-desktop" onclick="toggleSidebar()">
             <i class="fas fa-bars"></i>
         </div>
+
         <nav class="nav">
             <a href="{% url 'get_all' %}"><i class="fas fa-user-friends"></i>User Management</a>
             <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-database"></i> Asset Management</a>
@@ -747,7 +753,7 @@
             <th class="sortable">Name</th>
             <th class="sortable">Company</th>
             <th class="sortable">Job</th>
-            <th class="sortable">MC ID</th>
+            <th class="sortable">SST ID</th>
             <th class="sortable">Tag ID</th>
             <th class="sortable">Location</th>
             <th>Email</th>

@@ -1,6 +1,6 @@
 from django.urls import path
 from app1 import views
-from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,UserComplyAPIView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView,SignUpView,AdminLoginView,SignupView_new,LoginView_new,signup_view_new,login_view_new,GetSignupUserRetrieveAPIView,SignupUserUpdateView,ExpiryPostAPIView,BulkUpdateByEmailView,UserEnrolledUpdateAPIView_n,DatasetUpdateStatusView,DetectChangesView,FaceVerificationAndRelayAPI
+from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,UserComplyAPIView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView,SignUpView,AdminLoginView,SignupView_new,LoginView_new,signup_view_new,login_view_new,GetSignupUserRetrieveAPIView,SignupUserUpdateView,ExpiryPostAPIView,BulkUpdateByEmailView,UserEnrolledUpdateAPIView_n,DatasetUpdateStatusView,DetectChangesView,FaceVerificationAndRelayAPI,LoginAPIApp1
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -31,9 +31,9 @@ urlpatterns = [
     path('asset_manage/',views.asset_management,name='asset_manage'),
     path('asset_site/',views.asset_site,name='asset_site'),
     path('add_asset/',views.add_asset,name='add_asset'),
-    path('update_asset/<int:asset_id>/', views.update_asset, name='update_asset'),
-    path('delete_asset/<int:asset_id>/', views.delete_asset, name='delete_asset'),
-    path('asset_details/<int:asset_id>/', views.asset_details, name='asset_details'),
+    path('update_asset/<int:id>/', views.update_asset, name='update_asset'),
+    path('delete_asset/<int:id>/', views.delete_asset, name='delete_asset'),
+    path('asset_details/<int:id>/', views.asset_details, name='asset_details'),
     path('download-db/', DownloadDatabaseView.as_view(), name='download-db'),  # download in sqlite3 that is binary
     path('detect_changes/', ChangeDetectionView.as_view(), name='detect-changes'),
     path('exit/',views.exit,name='exit'),
@@ -80,7 +80,8 @@ urlpatterns = [
     path('post_tagid/', UpdateTagIDAPIView.as_view(), name='post_tagid'),
     path('post_orientation/', UpdateOrientationAPIView.as_view(), name='post_orientation'),
     path('face_api/', FacialDataApi.as_view(), name='face_api'),
-    path('loginapi/', LoginAPIApp.as_view(), name='loginapi'), 
+    path('loginapi/', LoginAPIApp.as_view(), name='loginapi'),
+    path('loginapi1/', LoginAPIApp1.as_view(), name='loginapi1'),  
     path('signupapi/',views.signup_api_app, name='signupapi'),
     path('site_docu/',views.site_document,name='site_docu'),
     path('preshift/',views.preshift,name='preshift'),

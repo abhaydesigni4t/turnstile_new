@@ -195,90 +195,6 @@
     }
 
 
-   
-
-    @media only screen and (max-width: 768px) {
-    .hidden-desktop {
-        display: block;
-    }
-
-    .nav {
-        display: none;
-        flex-direction: column;
-        position: absolute;
-        background-color: #071390;
-        width: 60%; /* Adjusted width for better visibility on mobile */
-        top: 70px;
-        left: 0;
-        padding: 10px;
-    }
-
-    .nav.open {
-        display: flex;
-    }
-
-    .nav-toggle-label {
-        display: block;
-        padding: 10px;
-        cursor: pointer;
-    }
-
-    .nav-toggle-label span {
-        display: block;
-        width: 25px;
-        height: 3px;
-        background-color: white;
-        margin: 5px;
-    }
-
-    header {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 10px;
-    }
-
-    .logo img {
-        max-height: 25px;
-        margin: 0 0 10px 0;
-    }
-
-    .dropdown-content {
-        left: 0;
-        transform: none;
-        min-width: 100%;
-    }
-
-    .dropdown-content a {
-        text-align: left;
-    }
-
-    .container {
-        text-align: center;
-        margin-top: 20px; /* Further reduced margin for better spacing on mobile */
-        padding: 0 5px; /* Further reduced padding to avoid content touching the edges */
-        width: 60%; /* Ensure container takes full width on mobile */
-        box-sizing: border-box; /* Include padding and border in the element's total width and height */
-    }
-
-    .chart-container {
-        max-width: 80%; /* Ensure chart container is responsive */
-        margin: 0 auto;
-        overflow-x: auto; /* Allow horizontal scrolling if needed */
-    }
-
-    .chart-container img {
-        width: 90%; /* Reduce the size of the pie chart */
-        height: auto; /* Maintain aspect ratio */
-        max-width: 400px; /* Optional: Set a max width for larger screens */
-    }
-
-    h1 {
-        font-size: 16px; /* Further adjusted font size for mobile */
-    }
-
-    
-}
-
 .container {
     text-align: center;
     margin-top: 75px;
@@ -381,6 +297,157 @@
 }
 
 
+
+@media (max-width: 768px) {
+    /* Adjust header and navigation styles for mobile */
+    header {
+        padding: 10px 10px; /* Reduce padding for smaller screens */
+    }
+    .nav {
+        margin-left: 50; /* Adjust left margin as needed */
+        width: 100%; /* Ensure the nav takes the full width */
+        display: flex; /* Use flexbox */
+        justify-content: space-between; /* Distribute links evenly */
+        
+    }
+    .nav a {
+        font-size: 12px; /* Reduce font size */
+        padding: 5px 10px; /* Adjust padding */
+        white-space: nowrap; /* Prevent text from wrapping */
+    }
+    
+    /* Hide dropdown content by default */
+    .dropdown-content {
+        display: none;
+    }
+    
+    /* Show dropdown content on hover (if applicable) or toggle with JavaScript */
+    .nav .dropdown:hover .dropdown-content {
+        display: block;
+    }
+    
+
+    .hidden-desktop {
+        display: block;
+        position: absolute;
+        top: 15px;
+        left: 15px; /* Changed from right to left */
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    .sidebar {
+        width: 200px;
+        transform: translateX(-250px); /* Hidden by default */
+    }
+
+    .sidebar.active {
+        transform: translateX(0); /* Show sidebar */
+    }
+}
+
+/* Target devices with screen width up to 480px */
+@media (max-width: 480px) {
+    /* Further adjustments for smaller screens */
+    header {
+        padding: 20px 20px; /* Further reduce padding */
+    }
+    .nav {
+        /* Ensure the nav takes the full width */
+        width: 100%;
+        margin-left:50px;
+      
+    }
+    .nav a {
+        font-size: 14px; /* Further reduce font size */
+        padding: 3px 5px; /* Further adjust padding */
+        white-space: nowrap; /* Prevent text from wrapping */
+        
+    }
+
+    
+    .logo img {
+        max-height: 40px;
+    }
+
+    .hidden-desktop {
+        display: block;
+        position: absolute;
+        top: 15px;
+        left: 15px; /* Changed from right to left */
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    .sidebar {
+        width: 200px;
+        transform: translateX(-250px); /* Hidden by default */
+    }
+
+    .sidebar.active {
+        transform: translateX(0); /* Show sidebar */
+    }
+}
+
+
+
+@media (max-width: 768px) {
+    .hidden-desktop {
+        display: block;
+        position: absolute;
+        top: 15px;
+        left: 15px; /* Changed from right to left */
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    .sidebar {
+        width: 200px;
+        transform: translateX(-250px); /* Hidden by default */
+    }
+
+    .sidebar.active {
+        transform: translateX(0); /* Show sidebar */
+    }
+
+    .logo img {
+        max-height: 40px;
+    }
+
+    .user {
+        margin-top: 70px;
+        margin-left:-240px;
+    }
+
+    .container {
+        text-align: center;
+        margin-top: 125px;
+        margin-left: auto; /* Adjusted margin-left */
+        max-width: 85%; /* Decreased max-width */
+    }
+    
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .stats {
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+        margin-left:auto;
+        margin-right:50px;
+    }
+   
+    .stats div span {
+        display: block;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+}
+
     </style>
 </head>
 
@@ -388,6 +455,11 @@
     <header>
        
 
+        <div class="hidden-desktop" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        
         <nav class="nav">
             <a href="{% url 'get_all' %}"><i class="fas fa-user-friends"></i>User Management</a>
             <a href="{% url 'asset_site' %}?site_name={{ request.GET.site_name }}"><i class="fas fa-database"></i> Asset Management</a>
@@ -503,6 +575,23 @@
         nav.classList.toggle('open');
     }
 </script>
+
+<script>
+    function toggleSidebar() {
+        var sidebar = document.querySelector('.sidebar');
+        sidebar.classList.toggle('active');
+    }
+
+    document.addEventListener('click', function(event) {
+        var sidebar = document.querySelector('.sidebar');
+        var hamburgerIcon = document.querySelector('.hidden-desktop');
+        
+        if (!sidebar.contains(event.target) && !hamburgerIcon.contains(event.target)) {
+            sidebar.classList.remove('active');
+        }
+    });
+</script>
+
 </body>
 
 </html>

@@ -57,15 +57,9 @@ class upload_form(forms.ModelForm):
         fields = ['uploaded_file']
 
 class AssetForm(forms.ModelForm):
-    asset_category_choices = [
-        ('category1', 'Category 1'),
-        ('category2', 'Category 2'), 
-    ]
-    asset_category = forms.ChoiceField(choices=asset_category_choices)
-
     class Meta:
         model = Asset
-        fields = ['asset_id', 'picture', 'asset_name', 'tag_id', 'description', 'asset_category', 'site']
+        fields = ['picture', 'asset_name', 'tag_id', 'description', 'site']
         widgets = {
             'picture': forms.FileInput(attrs={'class': 'custom-file-input'}),
             'footage': forms.FileInput(attrs={'class': 'custom-file-input'}),
@@ -79,6 +73,7 @@ class AssetForm(forms.ModelForm):
             if field:
                 field.widget.attrs.pop('initial', None)
                 field.widget.attrs.pop('clear_checkbox_label', None)
+
       
 class SiteForm(forms.ModelForm):
     class Meta:

@@ -629,9 +629,33 @@ class TurnstileUnlockSerializer(serializers.ModelSerializer):
         return 1 if obj.unlock else 0
 
 
-from .models import Site
+from django.conf import settings
+
+from rest_framework import serializers
+from django.db.models import Count, Q
 
 class SubAdminSiteSerializer(serializers.ModelSerializer):
+    picture_url = serializers.SerializerMethodField()
+    total_user = serializers.SerializerMethodField()
+    active_user = serializers.SerializerMethodField()
+    inactive_user = serializers.SerializerMethodField()
+
     class Meta:
         model = Site
-        fields = ['name']  # Adjust fields as needed
+        fields = ['picture_url', 'name', 'location', 'total_user', 'active_user', 'inactive_user']
+
+    def get_picture_url(self, obj):
+        request = self.context.get('request')
+        if obj.picture and request:
+            return request.build_absolute_uri(obj.picture.url)
+        return None
+
+    def get_total_user(self, obj):
+        return UserEnrolled.objects.filter(site=obj).count()
+
+    def get_active_user(self, obj):
+        return UserEnrolled.objects.filter(site=obj, status='active').count()
+
+    def get_inactive_user(self, obj):
+        return UserEnrolled.objects.filter(site=obj, status='inactive').count()
+

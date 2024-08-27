@@ -124,9 +124,29 @@ make all this correct
 
 ************************************
 
-using this view i create sub-admin those having selected sites access 
-now i want get api using drf that get selected site list of sub-admin using parameter email
+modify this api i want picture,name,location
 
+"class SubAdminSitesAPIView(generics.GenericAPIView):
+def get(self, request, *args, **kwargs):
+    email = request.query_params.get('email')
+    if not email:
+        return Response({'error': 'Email parameter is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        user = CustomUser.objects.get(email=email)
+        if not user.is_staff:
+            return Response({'error': 'User is not a sub-admin.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        sites = user.sites.all()
+        serializer = SubAdminSiteSerializer(sites, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except CustomUser.DoesNotExist:
+        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)"
+
+this is serializer "class SubAdminSiteSerializer(serializers.ModelSerializer):
+class Meta:
+    model = Site
+    fields = ['name']  # Adjust fields as needed"
 
 "@login_required
 def create_subadmin(request):
@@ -196,3 +216,18 @@ REQUIRED_FIELDS = ['name', 'company_name', 'job_role', 'mycompany_id', 'tag_id',
 
 def __str__(self):
     return self.email"
+
+this is site model "class Site(models.Model):
+picture = models.ImageField(upload_to='site_pictures/', blank=True, null=True)
+name = models.CharField(max_length=100,unique=True)
+location = models.CharField(max_length=100)
+
+def save(self, *args, **kwargs):
+    self.name = self.name.upper()
+    super(Site, self).save(*args, **kwargs)
+    
+def __str__(self):
+    return self.name"
+
+
+i want complete url of picture like this "http://127.0.0.1:8000//media/site_pictures/site_image1_1TWWy0V.jpg"

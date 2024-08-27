@@ -1815,16 +1815,17 @@ class SiteDeleteByNameAPIView(APIView):
 
 class UserEnrolledStatusCountView(APIView):
     def get(self, request):
-        total_users = UserEnrolled.objects.count()
-        active_users = UserEnrolled.objects.filter(status='active').count()
-        inactive_users = UserEnrolled.objects.filter(status='inactive').count()
-        
         sites = Site.objects.all()
         site_data = []
-        
+
         for site in sites:
+            # Count total users, active users, and inactive users for the site
+            total_users = UserEnrolled.objects.filter(site=site).count()
+            active_users = UserEnrolled.objects.filter(site=site, status='active').count()
+            inactive_users = UserEnrolled.objects.filter(site=site, status='inactive').count()
+            
             site_dict = {
-                'picture': request.build_absolute_uri(site.picture.url) if site.picture else None,
+                'picture_url': request.build_absolute_uri(site.picture.url) if site.picture else None,
                 'name': site.name,
                 'location': site.location,
                 'total_users': total_users,
@@ -2548,7 +2549,9 @@ class FaceVerificationAndRelayAPI(APIView):
 from .models import CustomUser, Site
 from .serializers import SubAdminSiteSerializer
 
-class SubAdminSitesAPIView(generics.GenericAPIView):
+from rest_framework.views import APIView
+
+class SubAdminSitesAPIView(APIView):
     def get(self, request, *args, **kwargs):
         email = request.query_params.get('email')
         if not email:
@@ -2559,8 +2562,10 @@ class SubAdminSitesAPIView(generics.GenericAPIView):
             if not user.is_staff:
                 return Response({'error': 'User is not a sub-admin.'}, status=status.HTTP_403_FORBIDDEN)
             
+            # Fetch all sites associated with the sub-admin user
             sites = user.sites.all()
-            serializer = SubAdminSiteSerializer(sites, many=True)
+            # Pass the request context to the serializer
+            serializer = SubAdminSiteSerializer(sites, many=True, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:
             return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)

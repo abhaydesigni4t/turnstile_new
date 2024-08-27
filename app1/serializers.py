@@ -627,3 +627,11 @@ class TurnstileUnlockSerializer(serializers.ModelSerializer):
     def get_unlock(self, obj):
         """Convert the boolean field to 0 or 1."""
         return 1 if obj.unlock else 0
+
+
+from .models import Site
+
+class SubAdminSiteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Site
+        fields = ['name']  # Adjust fields as needed

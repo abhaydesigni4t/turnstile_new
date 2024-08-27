@@ -243,13 +243,14 @@
         }
 
         #table-container {
-            margin-left: 250px; /* Adjust based on sidebar width */
+            margin-left: 218px; /* Adjust based on sidebar width */
             padding: 10px;
             background-color: #ffffff;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             margin-top: 7px; 
-            width:130%;
+            width: auto;
+            
         }
         
         .filter-container {
@@ -260,12 +261,12 @@
         
         .filter-container label {
             font-weight: bold;
-            margin-right: 0.5rem;
+            margin-right: -14px;
         }
         
         .filter-container input,
         .filter-container select {
-            padding: 4px;
+            padding: 2px;
             border: 1px solid #ccc;
             border-radius: 4px;
             width: 100px;
@@ -276,17 +277,18 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            
         }
         
-    
+       
         #customers td {
-            padding: 1px 3px;
+            padding: 1px 1px;
             text-align: center;
             border-bottom: 1px solid #ddd;
         }
         
         #customers th {
-            padding: 8px 10px;
+            padding: 3px 0px;
             background-color:  #e3e7ea;
             font-weight: bold;
         }
@@ -376,6 +378,7 @@
             align-items: center;
             margin-top: 20px;
             margin-bottom: 40px;
+            margin-left:-20px;
         }
         
         .pagination .step-links a,
@@ -404,12 +407,12 @@
 
         .filter-container {
             margin-bottom: 5px;
-            margin-left: 50px;
+            margin-left: 5px;
         }
 
         
         .filter-icon {
-            margin-right: 5px;
+            margin-right: 2px;
             cursor: pointer;
         }
 
@@ -491,13 +494,15 @@
     th {
         cursor: pointer;
         position: relative;
-        padding-right: 30px; /* Adjust spacing to make room for the icon */
+        padding-right: 0px; /* Adjust spacing to make room for the icon */
     }
+
+   
     
     th.sortable::after {
         content: "\f0dc"; /* Default to FontAwesome sort icon */
         position: absolute;
-        right: 5px; /* Distance from the right edge */
+        right: 0px; /* Distance from the right edge */
         top: 50%;
         transform: translateY(-50%);
         font-family: FontAwesome, sans-serif; /* Ensure FontAwesome or equivalent is loaded */
@@ -721,19 +726,19 @@
 
         <form id="filterForm">
             <div class="filter-container">
-                <label for="filterName">Name:</label>
+                <label for="filterName">Name</label>
                 <input type="text" id="filterName" name="filterName" value="{{ filterName|default_if_none:'' }}">
         
-                <label for="filterCompanyName">Company Name:</label>
+                <label for="filterCompanyName">Company Name</label>
                 <input type="text" id="filterCompanyName" name="filterCompanyName" value="{{ filterCompanyName|default_if_none:'' }}">
         
-                <label for="filterJobRole">Job Role:</label>
+                <label for="filterJobRole">Job Role</label>
                 <input type="text" id="filterJobRole" name="filterJobRole" value="{{ filterJobRole|default_if_none:'' }}">
         
-                <label for="filterJobLocation">Job Location:</label>
+                <label for="filterJobLocation">Job Location</label>
                 <input type="text" id="filterJobLocation" name="filterJobLocation" value="{{ filterJobLocation|default_if_none:'' }}">
         
-                <label for="filterStatus">Status:</label>
+                <label for="filterStatus">Status</label>
                 <select id="filterStatus" name="filterStatus">
                     <option value="">All</option>
                     <option value="active" {% if filterStatus == 'active' %}selected{% endif %}>Active</option>
@@ -749,18 +754,15 @@
             <tr>
                 <th><input type="checkbox" onClick="toggleAll(this)"></th>
                 <th class="sortable">Sr No</th>
-            <th>Picture</th>
+            <th>Img</th>
             <th class="sortable">Name</th>
             <th class="sortable">Company</th>
             <th class="sortable">Job</th>
-            <th class="sortable">SST ID</th>
             <th class="sortable">Tag ID</th>
             <th class="sortable">Location</th>
-            <th>Email</th>
             <th>Orientation</th>
-            <th>Facial Data</th>
+            <th>FD</th>
             <th>SST</th>
-            <th class="sortable">Expiry Data</th>
             <th>Status</th>
             <th>Action</th>
             </tr>
@@ -782,10 +784,8 @@
                 <td><a href="{% url 'user_update' i.sr %}"style="text-decoration: none;">{{ i.name }}</a></td>
                 <td>{{i.company_name}}</td>
                 <td>{{i.job_role}}</td>
-                <td>{{i.mycompany_id}}</td>
                 <td>{{i.tag_id}}</td>
                 <td>{{i.job_location}}</td>
-                <td>{{i.email}}</td>
                 {% load custom_filters %}
                 <td>
                     {% if i.orientation %}
@@ -837,7 +837,6 @@
                     N/A
                     {% endif %}
                 </td>
-                <td>{{ i.expiry_date }}</td>
                 <td>{{i.status}}</td>
                 <td>
                     <div class="dropdownb">

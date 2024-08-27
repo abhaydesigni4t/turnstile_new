@@ -436,14 +436,14 @@ def site_view(request):
         sites = user.sites.annotate(
             total_users=Count('userenrolled'),
             active_users=Count('userenrolled', filter=Q(userenrolled__status='active')),
-            inactive_users=Count('userenrolled', filter=Q(userenrolled__status='inactive'))
+            pending_users=Count('userenrolled', filter=Q(userenrolled__status='pending'))
         )
     else:
         # If the user is a super admin, show all sites
         sites = Site.objects.annotate(
             total_users=Count('userenrolled'),
             active_users=Count('userenrolled', filter=Q(userenrolled__status='active')),
-            inactive_users=Count('userenrolled', filter=Q(userenrolled__status='inactive'))
+            pending_users=Count('userenrolled', filter=Q(userenrolled__status='pending'))
         )
     sitess = Site.objects.all()
     site_names = [(site.name, site.name) for site in sitess]
@@ -2543,3 +2543,73 @@ class FaceVerificationAndRelayAPI(APIView):
         except Turnstile_S.DoesNotExist:
             # Handle the case where the turnstile does not exist
             pass
+        
+        
+from .models import CustomUser, Site
+from .serializers import SubAdminSiteSerializer
+
+class SubAdminSitesAPIView(generics.GenericAPIView):
+    def get(self, request, *args, **kwargs):
+        email = request.query_params.get('email')
+        if not email:
+            return Response({'error': 'Email parameter is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = CustomUser.objects.get(email=email)
+            if not user.is_staff:
+                return Response({'error': 'User is not a sub-admin.'}, status=status.HTTP_403_FORBIDDEN)
+            
+            sites = user.sites.all()
+            serializer = SubAdminSiteSerializer(sites, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+from django.views.decorators.csrf import csrf_exempt
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from django.http import JsonResponse
+
+@csrf_exempt
+def verify_google_token(request):
+    if request.method == 'POST':
+        try:
+            # Extract ID token from POST request
+            token = request.POST.get('id_token')
+            if not token:
+                return JsonResponse({'status': 'error', 'message': 'ID token not provided'}, status=400)
+
+            # Specify your CLIENT_ID here
+            CLIENT_ID = '415241782180-top7pc23c2mhaog3skt1g7qalde1p7ms.apps.googleusercontent.com'
+            
+            # Verify the ID token
+            idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
+            
+            # Extract user information from the token
+            google_id = idinfo['sub']
+            email = idinfo.get('email')
+            name = idinfo.get('name', '')  # Optionally extract the user's name
+            
+            # Create or update the user in your database
+            user, created = UserEnrolled.objects.get_or_create(email=email, defaults={
+                'name': name,
+                # Populate other fields as necessary
+            })
+            
+            # Update user information if needed
+            if not created:
+                user.name = name
+                # Update other fields as necessary
+                user.save()
+            
+            return JsonResponse({'status': 'success', 'user_id': user.sr, 'email': user.email})
+
+        except ValueError as e:
+            # Invalid token
+            return JsonResponse({'status': 'error', 'message': 'Invalid token: ' + str(e)}, status=400)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

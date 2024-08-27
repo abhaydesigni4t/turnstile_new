@@ -1,6 +1,6 @@
 from django.urls import path
 from app1 import views
-from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,UserComplyAPIView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView,SignUpView,AdminLoginView,SignupView_new,LoginView_new,signup_view_new,login_view_new,GetSignupUserRetrieveAPIView,SignupUserUpdateView,ExpiryPostAPIView,BulkUpdateByEmailView,UserEnrolledUpdateAPIView_n,DatasetUpdateStatusView,DetectChangesView,FaceVerificationAndRelayAPI,LoginAPIApp1
+from .views import UserEnrolledListCreateView,UserEnrolledRetrieveUpdateDestroyView,get_data,create_data,UpdateData,TaskDeleteView,DownloadDatabaseView,ActionStatusAPIView,ChangeDetectionView,LoginAPIView,AssetCreateAPIView,AssetListAPIView,UserEnrollListCreateAPIView,UserEnrollDetailAPIView,SiteListAPIView,SiteUpdateView,SiteDeleteView,CompanyUpdateView,CompanyDeleteView,NotificationList,FileUploadView,edit_timeschedule,delete_timeschedule,TurnstileUpdateView,Turnstile_API,Turnstile_get_single_api,ChangeAssetStatus,FacialDataApi,UpdateTagIDAPIView,UpdateOrientationAPIView,LoginAPIApp,PreShiftListCreateAPIView,ToolBoxListCreateAPIView,UserProfileCreateAPIView,OrientationCreateView,UserComplyAPIView,OnSiteUserCreateAPIView,OnSiteUserListView,DeleteFacialDataImage,DownloadCombinedFile,UserNameByTagIdAPIView,SiteCreateAPIView,SiteDeleteByNameAPIView,UserEnrolledStatusCountView,UserImageView,signup_api_app,UserEnrolledUpdateView11,GetUserByEmailView,SignUpView,AdminLoginView,SignupView_new,LoginView_new,signup_view_new,login_view_new,GetSignupUserRetrieveAPIView,SignupUserUpdateView,ExpiryPostAPIView,BulkUpdateByEmailView,UserEnrolledUpdateAPIView_n,DatasetUpdateStatusView,DetectChangesView,FaceVerificationAndRelayAPI,LoginAPIApp1,SubAdminSitesAPIView
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -81,7 +81,7 @@ urlpatterns = [
     path('post_orientation/', UpdateOrientationAPIView.as_view(), name='post_orientation'),
     path('face_api/', FacialDataApi.as_view(), name='face_api'),
     path('loginapi/', LoginAPIApp.as_view(), name='loginapi'),
-    path('login_api/', LoginAPIApp1.as_view(), name='login_api'),  
+    path('loginapi1/', LoginAPIApp1.as_view(), name='loginapi1'),  
     path('signupapi/',views.signup_api_app, name='signupapi'),
     path('site_docu/',views.site_document,name='site_docu'),
     path('preshift/',views.preshift,name='preshift'),
@@ -134,6 +134,8 @@ urlpatterns = [
     path('face_status/', DatasetUpdateStatusView.as_view(), name='face_status'),
     path('face_changes/', DetectChangesView.as_view(), name='detect_changes'),
     path('verify_face/', FaceVerificationAndRelayAPI.as_view(), name='verify_face'),
+    path('sub_admin_sites/', SubAdminSitesAPIView.as_view(), name='sub_admin_sites'),
+    path('verify_google/', views.verify_google_token, name='verify_google'), 
 
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

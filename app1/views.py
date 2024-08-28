@@ -2583,38 +2583,49 @@ from django.http import JsonResponse
 def verify_google_token(request):
     if request.method == 'POST':
         try:
-            # Extract ID token from POST request
             token = request.POST.get('id_token')
             if not token:
                 return JsonResponse({'status': 'error', 'message': 'ID token not provided'}, status=400)
 
-            # Specify your CLIENT_ID here
             CLIENT_ID = '415241782180-top7pc23c2mhaog3skt1g7qalde1p7ms.apps.googleusercontent.com'
-            
-            # Verify the ID token
             idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
-            
-            # Extract user information from the token
             google_id = idinfo['sub']
             email = idinfo.get('email')
-            name = idinfo.get('name', '')  # Optionally extract the user's name
-            
-            # Create or update the user in your database
+            name = idinfo.get('name', '')  
             user, created = UserEnrolled.objects.get_or_create(email=email, defaults={
                 'name': name,
-                # Populate other fields as necessary
             })
             
-            # Update user information if needed
             if not created:
                 user.name = name
-                # Update other fields as necessary
                 user.save()
-            
             return JsonResponse({'status': 'success', 'user_id': user.sr, 'email': user.email})
-
         except ValueError as e:
-            # Invalid token
             return JsonResponse({'status': 'error', 'message': 'Invalid token: ' + str(e)}, status=400)
-
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+
+from .serializers import UserWithSiteSerializer,PendingUserWithSiteSerializer
+
+class SiteWorkersAPIView(APIView):
+    def get(self, request, site):
+        try:
+           
+            site = Site.objects.get(name__iexact=site)
+            user_enrolled_list = UserEnrolled.objects.filter(site=site)
+            serializer = UserWithSiteSerializer(user_enrolled_list, many=True, context={'request': request})
+            return Response(serializer.data)
+        except Site.DoesNotExist:
+            return JsonResponse({'error': 'Site not found'}, status=404)
+        
+    
+class PendingSiteWorkersAPIView(APIView):
+    def get(self, request, site):
+        try:
+       
+            site = Site.objects.get(name__iexact=site)
+            user_enrolled_list = UserEnrolled.objects.filter(site=site, status='pending')
+            serializer = PendingUserWithSiteSerializer(user_enrolled_list, many=True, context={'request': request})
+            return Response(serializer.data)
+        except Site.DoesNotExist:
+            return JsonResponse({'error': 'Site not found'}, status=404)

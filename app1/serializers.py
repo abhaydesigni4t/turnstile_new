@@ -659,3 +659,56 @@ class SubAdminSiteSerializer(serializers.ModelSerializer):
     def get_inactive_user(self, obj):
         return UserEnrolled.objects.filter(site=obj, status='inactive').count()
 
+
+class UserWithSiteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserEnrolled
+        fields = ['picture', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location', 'orientation', 'facial_data', 'my_comply', 'expiry_date', 'status', 'email','site']
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        
+        rep['site'] = instance.site.name
+        
+        request = self.context.get('request')
+        
+        if instance.picture:
+            rep['picture'] = request.build_absolute_uri(instance.picture.url)
+        
+        if instance.orientation:
+            rep['orientation'] = request.build_absolute_uri(instance.orientation.url)
+        
+        if instance.facial_data:
+            rep['facial_data'] = request.build_absolute_uri(instance.facial_data.url)
+        
+        if instance.my_comply:
+            rep['my_comply'] = request.build_absolute_uri(instance.my_comply.url)
+        
+        return rep
+    
+    
+class PendingUserWithSiteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserEnrolled
+        fields = ['picture', 'name', 'company_name', 'job_role', 'mycompany_id', 'tag_id', 'job_location', 'orientation', 'facial_data', 'my_comply', 'expiry_date', 'status', 'email','site']  
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        
+        rep['site'] = instance.site.name
+        
+        request = self.context.get('request')
+        
+        if instance.picture:
+            rep['picture'] = request.build_absolute_uri(instance.picture.url)
+        
+        if instance.orientation:
+            rep['orientation'] = request.build_absolute_uri(instance.orientation.url)
+        
+        if instance.facial_data:
+            rep['facial_data'] = request.build_absolute_uri(instance.facial_data.url)
+        
+        if instance.my_comply:
+            rep['my_comply'] = request.build_absolute_uri(instance.my_comply.url)
+        
+        return rep

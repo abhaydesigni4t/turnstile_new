@@ -236,142 +236,205 @@
             }
         
 
-        .user {
-            margin-left:1px;
-            margin-top: 80px;
-          
-        }
-
-        #table-container {
-            margin-left: 218px; /* Adjust based on sidebar width */
-            padding: 10px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-top: 7px; 
-            width: auto;
+            .user {
+                margin-left: 0px;
+                margin-top: 80px;
+            }
             
-        }
-        
-        .filter-container {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 20px;
-        }
-        
-        .filter-container label {
-            font-weight: bold;
-            margin-right: -14px;
-        }
-        
-        .filter-container input,
-        .filter-container select {
-            padding: 2px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: 100px;
-        }
-        
-        /* Table styles */
-        #customers {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
+            #table-container {
+                margin-left: 218px; /* Adjust based on sidebar width */
+                padding: 10px;
+                background-color: #ffffff;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                margin-top: 7px; 
+                width: auto;
+                overflow-x: auto; /* Add horizontal scrollbar if needed */
+            }
             
-        }
-        
-       
-        #customers td {
-            padding: 1px 1px;
-            text-align: center;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        #customers th {
-            padding: 3px 0px;
-            background-color:  #e3e7ea;
-            font-weight: bold;
-        }
-        
-        #customers tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .heading1 {
-            text-align: center;
-            color: #071390;
-        }
-
-        .user .add {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #071390;
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: bold;
-            transition: background-color 0.3s ease;
-            margin-left: 250px;
-            margin-top: 20px;
-        }
-        
-        .user .add:hover {
-            background-color: #0056b3;
-        }
-
-
-        .inactive-btn {
-            padding: 5px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 5px;
-            text-decoration: none;
-        }
-
-        .delete-btn1 {
-            padding: 5px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 5px;
-            text-decoration: none;
-            background-color: #dc3545;
-            color: #ffffff;
-        }
-
-        .edit-btn {
-            background-color: #dbdbdb;
-            color: black;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 5px;
-            text-decoration: none;
-        }
-    
-        .dropdown-contentb .delete-btn {
-            background-color: #071390;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 5px;
-            text-decoration: none;
+            .filter-container {
+                display: flex;
+                flex-wrap: wrap; /* Allow wrapping of filters on smaller screens */
+                gap: 1rem;
+                margin-bottom: 20px;
+                
+            }
             
-        }
-        .inactive-btn {
-            background-color: #ffc107;
-            color: #ffffff;
-        }
-
-        .inactive-btn:hover {
-            background-color: #e0a800;
-        }
-
-
+            .filter-container label {
+                font-weight: bold;
+                margin-right: -2px;
+                font-size:15px;
+            }
+            
+            .filter-container input,
+            .filter-container select {
+                padding: 2px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                width: 100px;
+                max-width: 100%; /* Ensure inputs don't overflow on small screens */
+            }
+            
+            /* Table styles */
+            #customers {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }
+            
+            #customers td {
+                padding: 0px; /* Increase padding for better readability */
+                text-align: center;
+                border-bottom: 1px solid #ddd;
+                white-space: nowrap; /* Prevent text from wrapping */
+            }
+            
+            #customers th {
+                padding: 8px; /* Increase padding for better readability */
+                background-color: #e3e7ea;
+                font-weight: bold;
+                text-align: center; /* Center-align header text */
+                position: relative; /* Needed for absolute positioning of the sort icon */
+                font-size:15px;
+            }
+            
+            #customers tbody tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+            
+            .heading1 {
+                text-align: center;
+                color: #071390;
+            }
+            
+            .user .add {
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: #071390;
+                color: #ffffff;
+                text-decoration: none;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: bold;
+                transition: background-color 0.3s ease;
+                margin-left: 230px;
+                margin-top: 20px;
+            }
+            
+            .user .add:hover {
+                background-color: #0056b3;
+            }
+            
+            .inactive-btn {
+                padding: 5px 12px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-right: 5px;
+                text-decoration: none;
+                background-color: #ffc107;
+                color: #ffffff;
+            }
+            
+            .delete-btn1 {
+                padding: 5px 12px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-right: 5px;
+                text-decoration: none;
+                background-color: #dc3545;
+                color: #ffffff;
+            }
+            
+            .edit-btn {
+                background-color: #dbdbdb;
+                color: black;
+                padding: 8px 16px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-right: 5px;
+                text-decoration: none;
+            }
+            
+            .dropdown-contentb .delete-btn {
+                background-color: #071390;
+                color: white;
+                padding: 8px 16px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-right: 5px;
+                text-decoration: none;
+            }
+            
+            .inactive-btn:hover {
+                background-color: #e0a800;
+            }
+            
+            #filterStatus option[selected] {
+                background-color: #ddd;
+            }
+            
+            .filter-container {
+                margin-bottom: 5px;
+                margin-left: 40px;
+            }
+            
+            .filter-icon {
+                margin-right: 2px;
+                cursor: pointer;
+            }
+            
+            th div {
+                display: flex;
+                align-items: center;
+            }
+            
+            th {
+                cursor: pointer;
+                padding-right: 25px; /* Adjust spacing to make room for the icon */
+            }
+            
+            th.sortable::after {
+                content: "\f0dc"; /* Default to FontAwesome sort icon */
+                position: absolute;
+                right: 0px; /* Distance from the right edge */
+                top: 50%;
+                transform: translateY(-50%);
+                font-family: FontAwesome, sans-serif; /* Ensure FontAwesome or equivalent is loaded */
+                font-size: 16px; /* Adjust size as needed */
+                color: #333; /* Adjust color to match your theme */
+            }
+            
+            th.sortable.asc::after {
+                content: "\f0de"; /* FontAwesome sort up */
+            }
+            
+            th.sortable.desc::after {
+                content: "\f0dd"; /* FontAwesome sort down */
+            }
+            
+            @media screen and (max-width: 768px) {
+                #table-container {
+                    margin-left: 0; /* Remove sidebar margin on smaller screens */
+                }
+            
+                .filter-container {
+                    flex-direction: column; /* Stack filters vertically */
+                }
+            
+                .filter-container label {
+                    margin-top: 5px; /* Add spacing between labels */
+                }
+            
+                #customers td, #customers th {
+                    padding: 5px; /* Reduce padding for smaller screens */
+                }
+            }
+            
+   
         .pagination {
             display: flex;
             justify-content: center;
@@ -400,34 +463,9 @@
             background-color: #071390;
             color: #ffffff;
         }
-
-        #filterStatus option[selected] {
-            background-color: #ddd;
-        }
-
-        .filter-container {
-            margin-bottom: 5px;
-            margin-left: 5px;
-        }
-
-        
-        .filter-icon {
-            margin-right: 2px;
-            cursor: pointer;
-        }
-
-        
-        th div {
-            display: flex;
-            align-items: center;
-        }
-
-   
     .hidden-desktop {
         display: none;
     }
-
-
 
     .table-actions {
         position: relative;
@@ -490,34 +528,6 @@
     .sidebar a.activeLink:hover {
         color:  #071390 !important;
     }
-
-    th {
-        cursor: pointer;
-        position: relative;
-        padding-right: 0px; /* Adjust spacing to make room for the icon */
-    }
-
-   
-    
-    th.sortable::after {
-        content: "\f0dc"; /* Default to FontAwesome sort icon */
-        position: absolute;
-        right: 0px; /* Distance from the right edge */
-        top: 50%;
-        transform: translateY(-50%);
-        font-family: FontAwesome, sans-serif; /* Ensure FontAwesome or equivalent is loaded */
-        font-size: 16px; /* Adjust size as needed */
-        color: #333; /* Adjust color to match your theme */
-    }
-    
-    th.sortable.asc::after {
-        content: "\f0de"; /* FontAwesome sort up */
-    }
-    
-    th.sortable.desc::after {
-        content: "\f0dd"; /* FontAwesome sort down */
-    }
-    
 
     .dropdownl {
         position: relative;
@@ -729,13 +739,13 @@
                 <label for="filterName">Name</label>
                 <input type="text" id="filterName" name="filterName" value="{{ filterName|default_if_none:'' }}">
         
-                <label for="filterCompanyName">Company Name</label>
+                <label for="filterCompanyName">Company</label>
                 <input type="text" id="filterCompanyName" name="filterCompanyName" value="{{ filterCompanyName|default_if_none:'' }}">
         
-                <label for="filterJobRole">Job Role</label>
+                <label for="filterJobRole">Job</label>
                 <input type="text" id="filterJobRole" name="filterJobRole" value="{{ filterJobRole|default_if_none:'' }}">
         
-                <label for="filterJobLocation">Job Location</label>
+                <label for="filterJobLocation">Location</label>
                 <input type="text" id="filterJobLocation" name="filterJobLocation" value="{{ filterJobLocation|default_if_none:'' }}">
         
                 <label for="filterStatus">Status</label>
@@ -753,7 +763,7 @@
         <table id="customers">
             <tr>
                 <th><input type="checkbox" onClick="toggleAll(this)"></th>
-                <th class="sortable">Sr No</th>
+                <th class="sortable">SrNo</th>
             <th>Img</th>
             <th class="sortable">Name</th>
             <th class="sortable">Company</th>
